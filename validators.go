@@ -52,7 +52,7 @@ func Validate(value []byte, vt ValueType, schema *Schema) error {
 	return nil
 }
 
-func ValidateValue(value []byte, vt ValueType, schema *Schema) error {
+func validateValue(value []byte, vt ValueType, schema *Schema) error {
 	// If the we have an empty value and the schema is not boolean (false), then the doc is invalid
 	// if len(value) == 0 && schema.boolean != nil && !*schema.boolean {
 	if len(value) == 0 && schema.IsEmpty() {
@@ -61,7 +61,7 @@ func ValidateValue(value []byte, vt ValueType, schema *Schema) error {
 	return nil
 }
 
-func ValidateBoolean(value []byte, vt ValueType, schema *Schema) error {
+func validateBoolean(value []byte, vt ValueType, schema *Schema) error {
 	// Start by checking for empty JSON value
 	if len(value) == 0 {
 		// If we have an empty value and a boolean false schema then the value is valid
@@ -79,7 +79,7 @@ func ValidateBoolean(value []byte, vt ValueType, schema *Schema) error {
 	return errors.New("document does not match the false schema")
 }
 
-func ValidateRef(value []byte, vt ValueType, schema *Schema) error {
+func validateRef(value []byte, vt ValueType, schema *Schema) error {
 	refSchema, err := schema.ResolveRef(schema.Ref)
 	if err != nil {
 		log.Println(err)
@@ -89,7 +89,7 @@ func ValidateRef(value []byte, vt ValueType, schema *Schema) error {
 	return Validate(value, vt, refSchema)
 }
 
-func ValidateItems(value []byte, vt ValueType, schema *Schema) error {
+func validateItems(value []byte, vt ValueType, schema *Schema) error {
 	if schema == nil {
 		return errors.New("empty schema")
 	}
@@ -192,25 +192,25 @@ func ValidateItems(value []byte, vt ValueType, schema *Schema) error {
 }
 
 // Handled by ValidateItems
-// func ValidateAdditionalItems(value []byte, vt ValueType, schema *Schema) error {
+// func validateAdditionalItems(value []byte, vt ValueType, schema *Schema) error {
 // 	return errors.New("ValidateAdditionalItems is not implemented yet")
 // }
-// func ValidateMaxItems(value []byte, vt ValueType, schema *Schema) error {
+// func validateMaxItems(value []byte, vt ValueType, schema *Schema) error {
 // 	return errors.New("ValidateMaxItems is not implemented yet")
 // }
-// func ValidateMinItems(value []byte, vt ValueType, schema *Schema) error {
+// func validateMinItems(value []byte, vt ValueType, schema *Schema) error {
 // 	return errors.New("ValidateMinItems is not implemented yet")
 // }
-// func ValidateUniqueItems(value []byte, vt ValueType, schema *Schema) error {
+// func validateUniqueItems(value []byte, vt ValueType, schema *Schema) error {
 // 	return errors.New("ValidateUniqueItems is not implemented yet")
 // }
-// func ValidateContains(value []byte, vt ValueType, schema *Schema) error {
+// func validateContains(value []byte, vt ValueType, schema *Schema) error {
 // 	return errors.New("ValidateContains is not implemented yet")
 // }
 
 // Unless required, any property can be left out
 // Properties not defined in the schema are allowed, unless additionProperties == false
-func ValidateProperties(value []byte, vt ValueType, schema *Schema) error {
+func validateProperties(value []byte, vt ValueType, schema *Schema) error {
 	// Ignore anything other than Objects (probably an Array)
 	if vt != Object {
 		return nil
@@ -266,7 +266,7 @@ func ValidateProperties(value []byte, vt ValueType, schema *Schema) error {
 	}
 
 	if schema.Required != nil {
-		err := ValidateRequired(value, vt, schema)
+		err := validateRequired(value, vt, schema)
 		errs = addError(err, errs)
 	}
 
@@ -274,20 +274,20 @@ func ValidateProperties(value []byte, vt ValueType, schema *Schema) error {
 }
 
 // Handled in ValidateProperties
-// func ValidateMaxProperties(value []byte, vt ValueType, schema *Schema) error {
+// func validateMaxProperties(value []byte, vt ValueType, schema *Schema) error {
 // 	return errors.New("ValidateMaxProperties is not implemented yet")
 // }
-// func ValidateMinProperties(value []byte, vt ValueType, schema *Schema) error {
+// func validateMinProperties(value []byte, vt ValueType, schema *Schema) error {
 // 	return errors.New("ValidateMinProperties is not implemented yet")
 // }
-// func ValidatePatternProperties(value []byte, vt ValueType, schema *Schema) error {
+// func validatePatternProperties(value []byte, vt ValueType, schema *Schema) error {
 // 	return errors.New("ValidatePatternProperties is not implemented yet")
 // }
-// func ValidateAdditionalProperties(value []byte, vt ValueType, schema *Schema) error {
+// func validateAdditionalProperties(value []byte, vt ValueType, schema *Schema) error {
 // 	return errors.New("ValidateAdditionalProperties is not implemented yet")
 // }
 
-func ValidatePattern(value []byte, vt ValueType, schema *Schema) error {
+func validatePattern(value []byte, vt ValueType, schema *Schema) error {
 	// Ignore anything other than Strings
 	if vt != String {
 		return nil
@@ -303,7 +303,7 @@ func ValidatePattern(value []byte, vt ValueType, schema *Schema) error {
 // TODO: It might be necessary and / or better to split ValidateProperties into it's
 // 	     original multiple ValidateXxx methods, so that they do not depend on a
 //       properties object to exist.
-func ValidatePropertyNames(value []byte, vt ValueType, schema *Schema) error {
+func validatePropertyNames(value []byte, vt ValueType, schema *Schema) error {
 	// Ignore anything other than Objects (probably an Array)
 	if vt != Object {
 		return nil
@@ -314,7 +314,7 @@ func ValidatePropertyNames(value []byte, vt ValueType, schema *Schema) error {
 	})
 }
 
-func ValidateType(value []byte, vt ValueType, schema *Schema) error {
+func validateType(value []byte, vt ValueType, schema *Schema) error {
 	if vt == Unknown {
 		return errors.New("invalid value")
 	}
@@ -359,7 +359,7 @@ func ValidateType(value []byte, vt ValueType, schema *Schema) error {
 	return fmt.Errorf("unknown type")
 }
 
-func ValidateRequired(value []byte, vt ValueType, schema *Schema) error {
+func validateRequired(value []byte, vt ValueType, schema *Schema) error {
 	// Ignore anything other than Objects
 	if vt != Object {
 		return nil
@@ -399,7 +399,7 @@ func ValidateRequired(value []byte, vt ValueType, schema *Schema) error {
 	return nil
 }
 
-func ValidateDependencies(value []byte, vt ValueType, schema *Schema) error {
+func validateDependencies(value []byte, vt ValueType, schema *Schema) error {
 	// Ignore anything other than Objects
 	if vt != Object {
 		return nil
@@ -432,7 +432,7 @@ func ValidateDependencies(value []byte, vt ValueType, schema *Schema) error {
 		}
 
 		if dep.Strings != nil {
-			err := ValidateRequired(value, vt, &Schema{Required: dep.Strings})
+			err := validateRequired(value, vt, &Schema{Required: dep.Strings})
 			errs = addError(err, errs)
 		} else if dep.Schema != nil {
 			err := Validate(value, vt, dep.Schema)
@@ -443,7 +443,7 @@ func ValidateDependencies(value []byte, vt ValueType, schema *Schema) error {
 	return errs
 }
 
-func ValidateAllOf(value []byte, vt ValueType, schema *Schema) error {
+func validateAllOf(value []byte, vt ValueType, schema *Schema) error {
 	for _, subSchema := range *schema.AllOf {
 		err := Validate(value, vt, subSchema)
 		if err != nil {
@@ -454,7 +454,7 @@ func ValidateAllOf(value []byte, vt ValueType, schema *Schema) error {
 	return nil
 }
 
-func ValidateAnyOf(value []byte, vt ValueType, schema *Schema) error {
+func validateAnyOf(value []byte, vt ValueType, schema *Schema) error {
 	for _, subSchema := range *schema.AnyOf {
 		err := Validate(value, vt, subSchema)
 		if err == nil {
@@ -465,7 +465,7 @@ func ValidateAnyOf(value []byte, vt ValueType, schema *Schema) error {
 	return errors.New("value does not match any of the schemas")
 }
 
-func ValidateOneOf(value []byte, vt ValueType, schema *Schema) error {
+func validateOneOf(value []byte, vt ValueType, schema *Schema) error {
 	valid := false
 
 	for _, subSchema := range *schema.OneOf {
@@ -486,7 +486,7 @@ func ValidateOneOf(value []byte, vt ValueType, schema *Schema) error {
 	return errors.New("value does not match one of the schemas")
 }
 
-func ValidateNot(value []byte, vt ValueType, schema *Schema) error {
+func validateNot(value []byte, vt ValueType, schema *Schema) error {
 	err := Validate(value, vt, schema.Not)
 	if err == nil {
 		return errors.New("value should NOT match schema")
@@ -494,7 +494,7 @@ func ValidateNot(value []byte, vt ValueType, schema *Schema) error {
 	return nil
 }
 
-func ValidateMultipleOf(value []byte, vt ValueType, schema *Schema) error {
+func validateMultipleOf(value []byte, vt ValueType, schema *Schema) error {
 	// Ignore anything but numbers and integers
 	if vt != Number && vt != Integer {
 		return nil
@@ -510,7 +510,7 @@ func ValidateMultipleOf(value []byte, vt ValueType, schema *Schema) error {
 	return nil
 }
 
-func ValidateMaximum(value []byte, vt ValueType, schema *Schema) error {
+func validateMaximum(value []byte, vt ValueType, schema *Schema) error {
 	// Ignore anything but numbers and integers
 	if vt != Number && vt != Integer {
 		return nil
@@ -540,7 +540,7 @@ func ValidateMaximum(value []byte, vt ValueType, schema *Schema) error {
 	return errors.New("value is more than maximum")
 }
 
-func ValidateMinimum(value []byte, vt ValueType, schema *Schema) error {
+func validateMinimum(value []byte, vt ValueType, schema *Schema) error {
 	// Ignore anything but numbers and integers
 	if vt != Number && vt != Integer {
 		return nil
@@ -570,7 +570,7 @@ func ValidateMinimum(value []byte, vt ValueType, schema *Schema) error {
 	return errors.New("value is more than minimum")
 }
 
-func ValidateMaxLength(value []byte, vt ValueType, schema *Schema) error {
+func validateMaxLength(value []byte, vt ValueType, schema *Schema) error {
 	// Ignore anything but strings
 	if vt != String {
 		return nil
@@ -581,7 +581,7 @@ func ValidateMaxLength(value []byte, vt ValueType, schema *Schema) error {
 	return nil
 }
 
-func ValidateMinLength(value []byte, vt ValueType, schema *Schema) error {
+func validateMinLength(value []byte, vt ValueType, schema *Schema) error {
 	// Ignore anything but strings
 	if vt != String {
 		return nil
@@ -592,7 +592,7 @@ func ValidateMinLength(value []byte, vt ValueType, schema *Schema) error {
 	return nil
 }
 
-func ValidateEnum(value []byte, vt ValueType, schema *Schema) error {
+func validateEnum(value []byte, vt ValueType, schema *Schema) error {
 	val, err := NewValue(value, vt.ParserValueType())
 	if err != nil {
 		return err
@@ -606,7 +606,7 @@ func ValidateEnum(value []byte, vt ValueType, schema *Schema) error {
 	return errors.New("value is not part of the enum set")
 }
 
-func ValidateConst(value []byte, vt ValueType, schema *Schema) error {
+func validateConst(value []byte, vt ValueType, schema *Schema) error {
 	if vt == Integer || vt == Number {
 		if schema.Const.valueType == Integer || schema.Const.valueType == Number {
 			floatVal, _ := new(big.Float).SetString(string(value))
@@ -638,7 +638,7 @@ func ValidateConst(value []byte, vt ValueType, schema *Schema) error {
 	return errors.New("values does not match const")
 }
 
-func ValidateIf(value []byte, vt ValueType, schema *Schema) error {
+func validateIf(value []byte, vt ValueType, schema *Schema) error {
 	err := Validate(value, vt, schema.If)
 	if err == nil && schema.Then != nil {
 		return Validate(value, vt, schema.Then)
@@ -664,7 +664,7 @@ var reCurlyBracketsMatch = regexp.MustCompile(`(?:{\w+.*?})*`)
 var reDuration = regexp.MustCompile(`^P(?:\d+W|(?:\d+Y){0,1}(?:\d+M){0,1}(?:\d+D){0,1}(?:T(?:\d+H){0,1}(?:\d+M){0,1}(?:\d+S){0,1}){0,1})$`)
 var reUUID = regexp.MustCompile(`^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$`)
 
-func ValidateFormat(value []byte, vt ValueType, schema *Schema) error {
+func validateFormat(value []byte, vt ValueType, schema *Schema) error {
 	// Ignore anything that is not a string
 	if vt != String {
 		return nil

@@ -315,128 +315,128 @@ func (s *Schema) setupValidators() {
 	s.validators = []validatorFunc{}
 
 	// Always start by validating the value
-	s.validators = append(s.validators, ValidateValue)
+	s.validators = append(s.validators, validateValue)
 
 	if s.boolean != nil {
-		s.validators = append(s.validators, ValidateBoolean)
+		s.validators = append(s.validators, validateBoolean)
 	}
 
 	if s.Ref != nil {
-		s.validators = append(s.validators, ValidateRef)
+		s.validators = append(s.validators, validateRef)
 		return
 	}
 
 	if s.Items != nil || s.AdditionalItems != nil || s.MaxItems != nil || s.MinItems != nil || s.UniqueItems != nil || s.Contains != nil {
-		s.validators = append(s.validators, ValidateItems)
+		s.validators = append(s.validators, validateItems)
 	}
 
 	// if s.AdditionalItems != nil {
-	// 	s.validators = append(s.validators, ValidateAdditionalItems)
+	// 	s.validators = append(s.validators, validateAdditionalItems)
 	// }
 	// if s.MaxItems != nil {
-	// 	s.validators = append(s.validators, ValidateMaxItems)
+	// 	s.validators = append(s.validators, validateMaxItems)
 	// }
 	// if s.MinItems != nil {
-	// 	s.validators = append(s.validators, ValidateMinItems)
+	// 	s.validators = append(s.validators, validateMinItems)
 	// }
 	// if s.UniqueItems != nil {
-	// 	s.validators = append(s.validators, ValidateUniqueItems)
+	// 	s.validators = append(s.validators, validateUniqueItems)
 	// }
 	// if s.Contains != nil {
-	// 	s.validators = append(s.validators, ValidateContains)
+	// 	s.validators = append(s.validators, validateContains)
 	// }
 
 	if s.Properties != nil || s.PatternProperties != nil || s.AdditionalProperties != nil || s.MaxProperties != nil || s.MinProperties != nil {
-		s.validators = append(s.validators, ValidateProperties)
+		s.validators = append(s.validators, validateProperties)
 	}
 	// if s.PatternProperties != nil {
-	// 	s.validators = append(s.validators, ValidatePatternProperties)
+	// 	s.validators = append(s.validators, validatePatternProperties)
 	// }
 	// if s.AdditionalProperties != nil {
-	// 	s.validators = append(s.validators, ValidateAdditionalProperties)
+	// 	s.validators = append(s.validators, validateAdditionalProperties)
 	// }
 	// if s.MaxProperties != nil {
-	// 	s.validators = append(s.validators, ValidateMaxProperties)
+	// 	s.validators = append(s.validators, validateMaxProperties)
 	// }
 	// if s.MinProperties != nil {
-	// 	s.validators = append(s.validators, ValidateMinProperties)
+	// 	s.validators = append(s.validators, validateMinProperties)
 	// }
 
 	if s.PropertyNames != nil {
-		s.validators = append(s.validators, ValidatePropertyNames)
+		s.validators = append(s.validators, validatePropertyNames)
 	}
 
 	if s.Type != nil {
-		s.validators = append(s.validators, ValidateType)
+		s.validators = append(s.validators, validateType)
 	}
 
 	if s.Pattern != nil {
-		s.validators = append(s.validators, ValidatePattern)
+		s.validators = append(s.validators, validatePattern)
 	}
 
 	if s.Required != nil {
-		s.validators = append(s.validators, ValidateRequired)
+		s.validators = append(s.validators, validateRequired)
 	}
 
 	if s.Dependencies != nil {
-		s.validators = append(s.validators, ValidateDependencies)
+		s.validators = append(s.validators, validateDependencies)
 	}
 
 	if s.AllOf != nil {
-		s.validators = append(s.validators, ValidateAllOf)
+		s.validators = append(s.validators, validateAllOf)
 	}
 
 	if s.AnyOf != nil {
-		s.validators = append(s.validators, ValidateAnyOf)
+		s.validators = append(s.validators, validateAnyOf)
 	}
 
 	if s.OneOf != nil {
-		s.validators = append(s.validators, ValidateOneOf)
+		s.validators = append(s.validators, validateOneOf)
 	}
 
 	if s.Not != nil {
-		s.validators = append(s.validators, ValidateNot)
+		s.validators = append(s.validators, validateNot)
 	}
 
 	if s.MultipleOf != nil {
-		s.validators = append(s.validators, ValidateMultipleOf)
+		s.validators = append(s.validators, validateMultipleOf)
 	}
 
 	if s.Maximum != nil || s.ExclusiveMaximum != nil {
-		s.validators = append(s.validators, ValidateMaximum)
+		s.validators = append(s.validators, validateMaximum)
 	}
 	// if s.ExclusiveMaximum != nil {
-	// 	s.validators = append(s.validators, ValidateExclusiveMaximum)
+	// 	s.validators = append(s.validators, validateExclusiveMaximum)
 	// }
 
 	if s.Minimum != nil || s.ExclusiveMinimum != nil {
-		s.validators = append(s.validators, ValidateMinimum)
+		s.validators = append(s.validators, validateMinimum)
 	}
 	// if s.ExclusiveMinimum != nil {
-	// 	s.validators = append(s.validators, ValidateExclusiveMinimum)
+	// 	s.validators = append(s.validators, validateExclusiveMinimum)
 	// }
 
 	if s.MaxLength != nil {
-		s.validators = append(s.validators, ValidateMaxLength)
+		s.validators = append(s.validators, validateMaxLength)
 	}
 
 	if s.MinLength != nil {
-		s.validators = append(s.validators, ValidateMinLength)
+		s.validators = append(s.validators, validateMinLength)
 	}
 
 	if s.Enum != nil {
-		s.validators = append(s.validators, ValidateEnum)
+		s.validators = append(s.validators, validateEnum)
 	}
 
 	if s.Const != nil {
-		s.validators = append(s.validators, ValidateConst)
+		s.validators = append(s.validators, validateConst)
 	}
 
 	if s.If != nil {
-		s.validators = append(s.validators, ValidateIf)
+		s.validators = append(s.validators, validateIf)
 	}
 
 	if s.Format != nil {
-		s.validators = append(s.validators, ValidateFormat)
+		s.validators = append(s.validators, validateFormat)
 	}
 }
