@@ -3,7 +3,7 @@
 # jsonschema
 Go JSON Schema parser and validator
 
-Although this is a work in progress, it already passes both mandatory and optional test in the test suites for Draft 4, Draft 6 and Draft 7.
+Although this is a work in progress, it already passes both mandatory and optional tests in the test suites for Draft 4, Draft 6 and Draft 7.
 
 ## Contributions
 Contributions are very welcome! This project is young and could use more eyes and brains to make everything better.  
