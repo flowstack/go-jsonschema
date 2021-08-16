@@ -10,7 +10,7 @@ import (
 	"path"
 	"testing"
 
-	"github.com/flowstack/jsonschema/testtools"
+	"github.com/flowstack-com/jsonschema/testtools"
 	"github.com/xeipuuv/gojsonschema"
 )
 
