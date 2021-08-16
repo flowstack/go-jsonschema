@@ -1,4 +1,4 @@
-module github.com/flowstack-com/jsonschema
+module gitlab.com/flowstack/jsonschema
 
 go 1.16
 

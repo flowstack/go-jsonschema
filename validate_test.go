@@ -10,8 +10,8 @@ import (
 	"path"
 	"testing"
 
-	"github.com/flowstack-com/jsonschema/testtools"
 	"github.com/xeipuuv/gojsonschema"
+	"gitlab.com/flowstack/jsonschema/testtools"
 )
 
 type schemaTest struct {
