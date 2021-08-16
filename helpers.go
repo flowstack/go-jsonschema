@@ -66,7 +66,7 @@ func addError(err, errs error) error {
 	return fmt.Errorf("%w\n%s", errs, err.Error())
 }
 
-func ConvertRegexp(re string) string {
+func convertRegexp(re string) string {
 	re = strings.ReplaceAll(re, `\w`, `\pL`)
 	// re = strings.ReplaceAll(re, `\w`, `[0-9A-Za-z_]`)
 	// re = strings.ReplaceAll(re, `\W`, `[^0-9A-Za-z_]`)
@@ -85,7 +85,7 @@ func ConvertRegexp(re string) string {
 	return re
 }
 
-func IsInteger(val []byte) bool {
+func isInteger(val []byte) bool {
 	floatVal, ok := new(big.Float).SetString(string(val))
 	if !ok {
 		return false
@@ -149,7 +149,7 @@ numberLoop:
 		}
 	}
 	if isNum {
-		if IsInteger(data) {
+		if isInteger(data) {
 			isInt = true
 			isNum = false
 		} else {

@@ -321,7 +321,7 @@ func validateType(value []byte, vt ValueType, schema *Schema) error {
 
 	if schema.Type.String != nil {
 		// A value detected as a number, may still be a valid integer
-		if *schema.Type.String == "integer" && vt == Number && IsInteger(value) {
+		if *schema.Type.String == "integer" && vt == Number && isInteger(value) {
 			// In Draft 4 the value 1.0 can NOT be an integer all other drafts allows this
 			if schema.IsDraft4() && strings.Contains(string(value), ".") {
 				return fmt.Errorf("value is of type %s, but should be of type: %s", vt, *schema.Type.String)
@@ -341,7 +341,7 @@ func validateType(value []byte, vt ValueType, schema *Schema) error {
 	} else if schema.Type.Strings != nil {
 		for _, t := range *schema.Type.Strings {
 			// A value detected as a number, may still be a valid integer
-			if *t == "integer" && vt == Number && IsInteger(value) {
+			if *t == "integer" && vt == Number && isInteger(value) {
 				return nil
 			}
 			// A detected Integer is also a valid Number

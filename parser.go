@@ -184,7 +184,7 @@ func (s *Schema) Parse(jsonSchema []byte) (*Schema, error) {
 			if schema.PatternProperties != nil {
 				schema.patternPropertiesRegexps = &map[string]*regexp.Regexp{}
 				for reStr := range *schema.PatternProperties {
-					reStr = ConvertRegexp(reStr)
+					reStr = convertRegexp(reStr)
 					re, err := regexp.Compile(reStr)
 					if err != nil {
 						errs = addError(err, errs)
@@ -232,7 +232,7 @@ func (s *Schema) Parse(jsonSchema []byte) (*Schema, error) {
 			schema.Format = NewStringPtr(value)
 		case PropPattern:
 			schema.Pattern = NewStringPtr(value)
-			reStr := ConvertRegexp(*schema.Pattern)
+			reStr := convertRegexp(*schema.Pattern)
 			re, err := regexp.Compile(reStr)
 			if err != nil {
 				errs = addError(err, errs)
