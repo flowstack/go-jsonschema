@@ -234,12 +234,12 @@ func NewEnum(jsonVal []byte, vt jsonparser.ValueType) (*Enum, error) {
 
 		jsonparser.ArrayEach(jsonVal, func(value []byte, dataType jsonparser.ValueType, offset int, parseErr error) {
 			if parseErr != nil {
-				errs = AddError(parseErr, errs)
+				errs = addError(parseErr, errs)
 				return
 			}
 			val, err := NewValue(value, dataType)
 			if err != nil {
-				errs = AddError(err, errs)
+				errs = addError(err, errs)
 				return
 			}
 			enum = append(enum, val)
@@ -366,20 +366,20 @@ func NewSubSchemas(jsonVal []byte, vt jsonparser.ValueType, parentSchema *Schema
 
 		jsonparser.ArrayEach(jsonVal, func(value []byte, dataType jsonparser.ValueType, offset int, parseErr error) {
 			if parseErr != nil {
-				errs = AddError(parseErr, errs)
+				errs = addError(parseErr, errs)
 				return
 			}
 
 			if dataType == jsonparser.Object || dataType == jsonparser.Boolean {
 				schema, err := parentSchema.Parse(value)
 				if err != nil {
-					errs = AddError(err, errs)
+					errs = addError(err, errs)
 					return
 				}
 				schemas = append(schemas, schema)
 
 			} else {
-				errs = AddError(fmt.Errorf("expected type to be object or boolean, got: %s", vt.String()), errs)
+				errs = addError(fmt.Errorf("expected type to be object or boolean, got: %s", vt.String()), errs)
 			}
 		})
 
@@ -409,21 +409,21 @@ func NewStrings(jsonVal []byte, vt jsonparser.ValueType) (*Strings, error) {
 
 		jsonparser.ArrayEach(jsonVal, func(value []byte, dataType jsonparser.ValueType, offset int, parseErr error) {
 			if parseErr != nil {
-				errs = AddError(parseErr, errs)
+				errs = addError(parseErr, errs)
 				return
 			}
 
 			if dataType == jsonparser.String {
 				unescaped, err := jsonparser.Unescape(value, nil)
 				if err != nil {
-					errs = AddError(parseErr, errs)
+					errs = addError(parseErr, errs)
 					return
 				}
 				tmpStr := string(unescaped)
 				strings = append(strings, &tmpStr)
 
 			} else {
-				errs = AddError(fmt.Errorf("expected type to be string, got: %s", vt.String()), errs)
+				errs = addError(fmt.Errorf("expected type to be string, got: %s", vt.String()), errs)
 			}
 		})
 
@@ -453,13 +453,13 @@ func NewValues(jsonVal []byte, vt jsonparser.ValueType) (*Values, error) {
 
 		jsonparser.ArrayEach(jsonVal, func(value []byte, dataType jsonparser.ValueType, offset int, parseErr error) {
 			if parseErr != nil {
-				errs = AddError(parseErr, errs)
+				errs = addError(parseErr, errs)
 				return
 			}
 
 			val, err := NewValue(value, dataType)
 			if err != nil {
-				errs = AddError(err, errs)
+				errs = addError(err, errs)
 				return
 			}
 			values = append(values, val)

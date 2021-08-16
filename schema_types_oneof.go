@@ -91,7 +91,7 @@ func NewType(jsonVal []byte, vt jsonparser.ValueType) (*Type, error) {
 
 		jsonparser.ArrayEach(jsonVal, func(value []byte, dataType jsonparser.ValueType, offset int, parseErr error) {
 			if parseErr != nil {
-				errs = AddError(parseErr, errs)
+				errs = addError(parseErr, errs)
 				return
 			}
 
@@ -138,26 +138,26 @@ func NewItems(jsonVal []byte, vt jsonparser.ValueType, parentSchema *Schema) (*I
 	case jsonparser.Object:
 		items.Schema, err = parentSchema.Parse(jsonVal)
 		if err != nil {
-			errs = AddError(err, errs)
+			errs = addError(err, errs)
 		}
 
 	case jsonparser.Array:
 		items.Schemas, err = NewSubSchemas(jsonVal, vt, parentSchema)
 		if err != nil {
-			errs = AddError(err, errs)
+			errs = addError(err, errs)
 		}
 
 	case jsonparser.Boolean:
 		var tmpBool bool
 		tmpBool, err = jsonparser.ParseBoolean(jsonVal)
 		if err != nil {
-			errs = AddError(err, errs)
+			errs = addError(err, errs)
 		}
 
 		items.Boolean = &tmpBool
 
 	default:
-		errs = AddError(fmt.Errorf("expected an object, got: %s", vt.String()), errs)
+		errs = addError(fmt.Errorf("expected an object, got: %s", vt.String()), errs)
 	}
 
 	if errs != nil {
@@ -195,7 +195,7 @@ func NewDependency(jsonVal []byte, vt jsonparser.ValueType, parentSchema *Schema
 	case jsonparser.Object:
 		dependency.Schema, err = parentSchema.Parse(jsonVal)
 		if err != nil {
-			errs = AddError(err, errs)
+			errs = addError(err, errs)
 		}
 
 	case jsonparser.Array:
@@ -203,21 +203,21 @@ func NewDependency(jsonVal []byte, vt jsonparser.ValueType, parentSchema *Schema
 
 		jsonparser.ArrayEach(jsonVal, func(value []byte, dataType jsonparser.ValueType, offset int, parseErr error) {
 			if parseErr != nil {
-				errs = AddError(parseErr, errs)
+				errs = addError(parseErr, errs)
 				return
 			}
 
 			if dataType == jsonparser.String {
 				strings = append(strings, NewStringPtr(value))
 			} else {
-				errs = AddError(fmt.Errorf("expected a string, got: %s", dataType.String()), errs)
+				errs = addError(fmt.Errorf("expected a string, got: %s", dataType.String()), errs)
 			}
 		})
 
 		dependency.Strings = &strings
 
 	default:
-		errs = AddError(fmt.Errorf("expected an array or object, got: %s", vt.String()), errs)
+		errs = addError(fmt.Errorf("expected an array or object, got: %s", vt.String()), errs)
 	}
 
 	if errs != nil {
@@ -313,13 +313,13 @@ func NewValue(jsonVal []byte, vt jsonparser.ValueType) (*Value, error) {
 
 		jsonparser.ArrayEach(jsonVal, func(value []byte, dataType jsonparser.ValueType, offset int, parseErr error) {
 			if parseErr != nil {
-				errs = AddError(parseErr, errs)
+				errs = addError(parseErr, errs)
 				return
 			}
 
 			tmpVal, err := NewValue(value, dataType)
 			if err != nil {
-				errs = AddError(err, errs)
+				errs = addError(err, errs)
 				return
 			}
 

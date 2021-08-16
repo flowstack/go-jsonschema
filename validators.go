@@ -122,13 +122,13 @@ func ValidateItems(value []byte, vt ValueType, schema *Schema) error {
 
 		// Don't spent time validating, if we already have a parser error
 		if parseErr != nil {
-			errs = AddError(parseErr, errs)
+			errs = addError(parseErr, errs)
 			return
 		}
 
 		if schema.UniqueItems != nil && *schema.UniqueItems {
 			if unique.Exists(value, dataType) {
-				errs = AddError(errors.New("values are not unique"), errs)
+				errs = addError(errors.New("values are not unique"), errs)
 				return
 			}
 		}
@@ -146,11 +146,11 @@ func ValidateItems(value []byte, vt ValueType, schema *Schema) error {
 
 		} else if schema.Items.Schema != nil {
 			err := Validate(value, ValueType(dataType), schema.Items.Schema)
-			errs = AddError(err, errs)
+			errs = addError(err, errs)
 
 		} else if schema.Items.Schemas != nil && idx < len(*schema.Items.Schemas) {
 			err := Validate(value, ValueType(dataType), (*schema.Items.Schemas)[idx])
-			errs = AddError(err, errs)
+			errs = addError(err, errs)
 
 		} else if schema.AdditionalItems == nil {
 			// It's allowed to have more items than schemas
@@ -159,33 +159,33 @@ func ValidateItems(value []byte, vt ValueType, schema *Schema) error {
 		} else if schema.AdditionalItems != nil && (schema.IsDraft4() || len(*schema.Items.Schemas) > 0) {
 			// Only draft 4 allows addtionalItems without items as well
 			err := Validate(value, ValueType(dataType), schema.AdditionalItems)
-			errs = AddError(err, errs)
+			errs = addError(err, errs)
 
 		} else {
-			errs = AddError(fmt.Errorf("index %d has no schema to match against", idx), errs)
+			errs = addError(fmt.Errorf("index %d has no schema to match against", idx), errs)
 		}
 	})
 
 	if schema.Contains != nil && !contains {
-		errs = AddError(errors.New("no values matched the contains schema"), errs)
+		errs = addError(errors.New("no values matched the contains schema"), errs)
 	}
 
 	count := int64(idx + 1)
 
 	if schema.MaxItems != nil {
 		if count > *schema.MaxItems {
-			errs = AddError(errors.New("too many properties"), errs)
+			errs = addError(errors.New("too many properties"), errs)
 		}
 	}
 
 	if schema.MinItems != nil {
 		if count < *schema.MinItems {
-			errs = AddError(errors.New("too few properties"), errs)
+			errs = addError(errors.New("too few properties"), errs)
 		}
 	}
 
 	if parseErr != nil {
-		errs = AddError(parseErr, errs)
+		errs = addError(parseErr, errs)
 	}
 
 	return errs
@@ -255,19 +255,19 @@ func ValidateProperties(value []byte, vt ValueType, schema *Schema) error {
 
 	if schema.MaxProperties != nil {
 		if count > *schema.MaxProperties {
-			errs = AddError(errors.New("too many properties"), errs)
+			errs = addError(errors.New("too many properties"), errs)
 		}
 	}
 
 	if schema.MinProperties != nil {
 		if count < *schema.MinProperties {
-			errs = AddError(errors.New("too few properties"), errs)
+			errs = addError(errors.New("too few properties"), errs)
 		}
 	}
 
 	if schema.Required != nil {
 		err := ValidateRequired(value, vt, schema)
-		errs = AddError(err, errs)
+		errs = addError(err, errs)
 	}
 
 	return errs
@@ -376,12 +376,12 @@ func ValidateRequired(value []byte, vt ValueType, schema *Schema) error {
 	jsonparser.EachKey(value, func(idx int, value []byte, vt jsonparser.ValueType, parseErr error) {
 		// Don't spent time validating, if we already have a parser error
 		if parseErr != nil {
-			errs = AddError(parseErr, errs)
+			errs = addError(parseErr, errs)
 			return
 		}
 
 		if len(value) == 0 {
-			errs = AddError(fmt.Errorf("required value not found"), errs)
+			errs = addError(fmt.Errorf("required value not found"), errs)
 			return
 		}
 
@@ -415,28 +415,28 @@ func ValidateDependencies(value []byte, vt ValueType, schema *Schema) error {
 	jsonparser.EachKey(value, func(idx int, subVal []byte, dataType jsonparser.ValueType, parseErr error) {
 		// Don't spent time validating, if we already have a parser error
 		if parseErr != nil {
-			errs = AddError(parseErr, errs)
+			errs = addError(parseErr, errs)
 			return
 		}
 
 		if len(paths[idx]) != 1 {
-			errs = AddError(errors.New("unexpected path"), errs)
+			errs = addError(errors.New("unexpected path"), errs)
 			return
 		}
 
 		path := paths[idx][0]
 		dep, ok := (*schema.Dependencies)[path]
 		if !ok {
-			errs = AddError(errors.New("path not found in dependencies"), errs)
+			errs = addError(errors.New("path not found in dependencies"), errs)
 			return
 		}
 
 		if dep.Strings != nil {
 			err := ValidateRequired(value, vt, &Schema{Required: dep.Strings})
-			errs = AddError(err, errs)
+			errs = addError(err, errs)
 		} else if dep.Schema != nil {
 			err := Validate(value, vt, dep.Schema)
-			errs = AddError(err, errs)
+			errs = addError(err, errs)
 		}
 	}, paths...)
 

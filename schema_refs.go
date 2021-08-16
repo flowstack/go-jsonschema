@@ -208,7 +208,7 @@ func (s *Schema) ResolveRef(ref *Ref) (*Schema, error) {
 		// Fetch the schema
 		if baseSchema == nil {
 			if err != nil {
-				return nil, AddError(errors.New("ref contains invalid URL"), err)
+				return nil, addError(errors.New("ref contains invalid URL"), err)
 			}
 
 			// TODO: We should probably accept query params

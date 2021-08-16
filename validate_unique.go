@@ -66,12 +66,12 @@ func (u *uniqueValidator) Exists(data []byte, vt jsonparser.ValueType) bool {
 		var errs error
 		_, err := jsonparser.ArrayEach(data, func(value []byte, dataType jsonparser.ValueType, offset int, err error) {
 			if arrVal.Exists(value, dataType) {
-				errs = AddError(errors.New("already exists"), errs)
+				errs = addError(errors.New("already exists"), errs)
 				return
 			}
 		})
 		if err != nil || errs != nil {
-			// errs = AddError(err, errs)
+			// errs = addError(err, errs)
 			return true
 		}
 		key = string(data)

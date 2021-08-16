@@ -55,7 +55,7 @@ var regexpControlChars = map[string]string{
 	`\c_`: `\01F`,
 }
 
-func AddError(err, errs error) error {
+func addError(err, errs error) error {
 	if err == nil {
 		return errs
 	}

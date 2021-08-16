@@ -46,7 +46,7 @@ func (s *Schema) Parse(jsonSchema []byte) (*Schema, error) {
 	// // Simplest solution for getting ($)id and $ref first, which is needed for separation and de-ref'ing
 	jsonparser.EachKey(jsonSchema, func(idx int, value []byte, vt jsonparser.ValueType, err error) {
 		if err != nil {
-			errs = AddError(err, errs)
+			errs = addError(err, errs)
 			return
 		}
 
@@ -57,7 +57,7 @@ func (s *Schema) Parse(jsonSchema []byte) (*Schema, error) {
 			schema.IDDraft04 = NewStringPtr(value)
 		case PropRef:
 			schema.Ref, err = NewRef(value, vt, schema)
-			errs = AddError(err, errs)
+			errs = addError(err, errs)
 		}
 	}, [][]string{PropID: {"$id"}, PropIDDraft04: {"id"}, PropRef: {"$ref"}}...)
 
@@ -73,7 +73,7 @@ func (s *Schema) Parse(jsonSchema []byte) (*Schema, error) {
 			var err error
 			schema.baseURI, err = s.ExpandURI(id)
 			if err != nil {
-				AddError(err, errs)
+				addError(err, errs)
 				return nil, errs
 			}
 
@@ -89,7 +89,7 @@ func (s *Schema) Parse(jsonSchema []byte) (*Schema, error) {
 
 	jsonparser.EachKey(jsonSchema, func(idx int, value []byte, vt jsonparser.ValueType, err error) {
 		if err != nil {
-			errs = AddError(err, errs)
+			errs = addError(err, errs)
 			return
 		}
 
@@ -100,7 +100,7 @@ func (s *Schema) Parse(jsonSchema []byte) (*Schema, error) {
 		// 	schema.IDDraft04 = NewStringPtr(value)
 		// case PropRef:
 		// 	schema.Ref, err = NewRef(value, vt, schema)
-		// 	errs = AddError(err, errs)
+		// 	errs = addError(err, errs)
 		case PropSchema:
 			schema.Schema = NewStringPtr(value)
 		case PropComment:
@@ -111,75 +111,75 @@ func (s *Schema) Parse(jsonSchema []byte) (*Schema, error) {
 			schema.Description = NewStringPtr(value)
 		case PropType:
 			schema.Type, err = NewType(value, vt)
-			errs = AddError(err, errs)
+			errs = addError(err, errs)
 		case PropEnum:
 			schema.Enum, err = NewEnum(value, vt)
-			errs = AddError(err, errs)
+			errs = addError(err, errs)
 		case PropDefault:
 			schema.Default, err = NewValue(value, vt)
-			errs = AddError(err, errs)
+			errs = addError(err, errs)
 		case PropExamples:
 			schema.Examples, err = NewValues(value, vt)
-			errs = AddError(err, errs)
+			errs = addError(err, errs)
 		case PropConst:
 			schema.Const, err = NewValue(value, vt)
-			errs = AddError(err, errs)
+			errs = addError(err, errs)
 		case PropReadOnly:
 			tmpBool, err := jsonparser.ParseBoolean(value)
 			schema.ReadOnly = &tmpBool
-			errs = AddError(err, errs)
+			errs = addError(err, errs)
 		case PropWriteOnly:
 			tmpBool, err := jsonparser.ParseBoolean(value)
 			schema.WriteOnly = &tmpBool
-			errs = AddError(err, errs)
+			errs = addError(err, errs)
 		case PropDefinitions:
 			schema.Definitions, err = NewDefinitions(value, vt, schema)
-			errs = AddError(err, errs)
+			errs = addError(err, errs)
 		case PropIf:
 			schema.If, err = schema.Parse(value)
-			errs = AddError(err, errs)
+			errs = addError(err, errs)
 		case PropThen:
 			schema.Then, err = schema.Parse(value)
-			errs = AddError(err, errs)
+			errs = addError(err, errs)
 		case PropElse:
 			schema.Else, err = schema.Parse(value)
-			errs = AddError(err, errs)
+			errs = addError(err, errs)
 		case PropAllOf:
 			schema.AllOf, err = NewSubSchemas(value, vt, schema)
-			errs = AddError(err, errs)
+			errs = addError(err, errs)
 		case PropAnyOf:
 			schema.AnyOf, err = NewSubSchemas(value, vt, schema)
-			errs = AddError(err, errs)
+			errs = addError(err, errs)
 		case PropOneOf:
 			schema.OneOf, err = NewSubSchemas(value, vt, schema)
-			errs = AddError(err, errs)
+			errs = addError(err, errs)
 		case PropNot:
 			schema.Not, err = schema.Parse(value)
-			errs = AddError(err, errs)
+			errs = addError(err, errs)
 		case PropContentEncoding:
 			schema.ContentEncoding = NewStringPtr(value)
 		case PropContentMediaType:
 			schema.ContentMediaType = NewStringPtr(value)
 		case PropProperties:
 			schema.Properties, err = NewProperties(value, vt, schema)
-			errs = AddError(err, errs)
+			errs = addError(err, errs)
 		case PropRequired:
 			schema.Required, err = NewStrings(value, vt)
-			errs = AddError(err, errs)
+			errs = addError(err, errs)
 		case PropMaxProperties:
 			tmpInt, err := jsonparser.ParseInt(value)
 			schema.MaxProperties = &tmpInt
-			errs = AddError(err, errs)
+			errs = addError(err, errs)
 		case PropMinProperties:
 			tmpInt, err := jsonparser.ParseInt(value)
 			schema.MinProperties = &tmpInt
-			errs = AddError(err, errs)
+			errs = addError(err, errs)
 		case PropDependencies:
 			schema.Dependencies, err = NewDependencies(value, vt, schema)
-			errs = AddError(err, errs)
+			errs = addError(err, errs)
 		case PropPatternProperties:
 			schema.PatternProperties, err = NewProperties(value, vt, schema)
-			errs = AddError(err, errs)
+			errs = addError(err, errs)
 			// Pre-compile the regexps
 			if schema.PatternProperties != nil {
 				schema.patternPropertiesRegexps = &map[string]*regexp.Regexp{}
@@ -187,7 +187,7 @@ func (s *Schema) Parse(jsonSchema []byte) (*Schema, error) {
 					reStr = ConvertRegexp(reStr)
 					re, err := regexp.Compile(reStr)
 					if err != nil {
-						errs = AddError(err, errs)
+						errs = addError(err, errs)
 					} else {
 						(*schema.patternPropertiesRegexps)[reStr] = re
 					}
@@ -195,39 +195,39 @@ func (s *Schema) Parse(jsonSchema []byte) (*Schema, error) {
 			}
 		case PropAdditionalProperties:
 			schema.AdditionalProperties, err = schema.Parse(value)
-			errs = AddError(err, errs)
+			errs = addError(err, errs)
 		case PropPropertyNames:
 			schema.PropertyNames, err = schema.Parse(value)
-			errs = AddError(err, errs)
+			errs = addError(err, errs)
 		case PropItems:
 			schema.Items, err = NewItems(value, vt, schema)
-			errs = AddError(err, errs)
+			errs = addError(err, errs)
 		case PropMaxItems:
 			tmpInt, err := jsonparser.ParseInt(value)
 			schema.MaxItems = &tmpInt
-			errs = AddError(err, errs)
+			errs = addError(err, errs)
 		case PropMinItems:
 			tmpInt, err := jsonparser.ParseInt(value)
 			schema.MinItems = &tmpInt
-			errs = AddError(err, errs)
+			errs = addError(err, errs)
 		case PropUniqueItems:
 			tmpBool, err := jsonparser.ParseBoolean(value)
 			schema.UniqueItems = &tmpBool
-			errs = AddError(err, errs)
+			errs = addError(err, errs)
 		case PropAdditionalItems:
 			schema.AdditionalItems, err = schema.Parse(value)
-			errs = AddError(err, errs)
+			errs = addError(err, errs)
 		case PropContains:
 			schema.Contains, err = schema.Parse(value)
-			errs = AddError(err, errs)
+			errs = addError(err, errs)
 		case PropMaxLength:
 			tmpInt, err := jsonparser.ParseInt(value)
 			schema.MaxLength = &tmpInt
-			errs = AddError(err, errs)
+			errs = addError(err, errs)
 		case PropMinLength:
 			tmpInt, err := jsonparser.ParseInt(value)
 			schema.MinLength = &tmpInt
-			errs = AddError(err, errs)
+			errs = addError(err, errs)
 		case PropFormat:
 			schema.Format = NewStringPtr(value)
 		case PropPattern:
@@ -235,7 +235,7 @@ func (s *Schema) Parse(jsonSchema []byte) (*Schema, error) {
 			reStr := ConvertRegexp(*schema.Pattern)
 			re, err := regexp.Compile(reStr)
 			if err != nil {
-				errs = AddError(err, errs)
+				errs = addError(err, errs)
 			} else {
 				schema.patternRegexp = re
 			}
@@ -244,16 +244,16 @@ func (s *Schema) Parse(jsonSchema []byte) (*Schema, error) {
 			schema.MultipleOf = &tmpNum
 		case PropMaximum:
 			schema.Maximum, err = NewValue(value, vt)
-			errs = AddError(err, errs)
+			errs = addError(err, errs)
 		case PropExclusiveMaximum:
 			schema.ExclusiveMaximum, err = NewValue(value, vt)
-			errs = AddError(err, errs)
+			errs = addError(err, errs)
 		case PropMinimum:
 			schema.Minimum, err = NewValue(value, vt)
-			errs = AddError(err, errs)
+			errs = addError(err, errs)
 		case PropExclusiveMinimum:
 			schema.ExclusiveMinimum, err = NewValue(value, vt)
-			errs = AddError(err, errs)
+			errs = addError(err, errs)
 		}
 	}, propNames...)
 
