@@ -17,9 +17,9 @@ var (
 	//go:embed schemas/draft-07.json
 	draft07Source []byte
 
-	draft04Schema *Schema
-	draft06Schema *Schema
-	draft07Schema *Schema
+	Draft04Schema *Schema
+	Draft06Schema *Schema
+	Draft07Schema *Schema
 )
 
 func init() {
@@ -35,15 +35,15 @@ func init() {
 
 	var err error
 
-	draft04Schema, err = New(draft04Source)
+	Draft04Schema, err = New(draft04Source)
 	if err != nil {
 		panic(fmt.Errorf("can't start without schemas/draft-04.json\n%s", err.Error()))
 	}
-	draft06Schema, err = New(draft06Source)
+	Draft06Schema, err = New(draft06Source)
 	if err != nil {
 		panic(fmt.Errorf("can't start without schemas/draft-06.json\n%s", err.Error()))
 	}
-	draft07Schema, err = New(draft07Source)
+	Draft07Schema, err = New(draft07Source)
 	if err != nil {
 		panic(fmt.Errorf("can't start without schemas/draft-07.json\n%s", err.Error()))
 	}

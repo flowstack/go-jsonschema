@@ -183,15 +183,15 @@ func (s *Schema) ResolveRef(ref *Ref) (*Schema, error) {
 
 		switch refURI.String() {
 		case "http://json-schema.org/draft-04/schema":
-			baseSchema = draft04Schema
+			baseSchema = Draft04Schema
 		case "http://json-schema.org/draft-05/schema":
-			baseSchema = draft04Schema
+			baseSchema = Draft04Schema
 		case "http://json-schema.org/schema":
-			baseSchema = draft04Schema
+			baseSchema = Draft04Schema
 		case "http://json-schema.org/draft-06/schema":
-			baseSchema = draft06Schema
+			baseSchema = Draft06Schema
 		case "http://json-schema.org/draft-07/schema":
-			baseSchema = draft07Schema
+			baseSchema = Draft07Schema
 		default:
 			if s != nil {
 				frag := refURI.Fragment
