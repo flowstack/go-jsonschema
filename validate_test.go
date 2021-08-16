@@ -151,6 +151,17 @@ func TestValidateValue(t *testing.T) {
 	}
 }
 
+func TestValidateSchema(t *testing.T) {
+	var testSchema = `{"$id":"bla","const":null,"properties":{"bla":{"type":["string","null"]},"yadda":{"enum":["abc",123,1.23,null,false]}}}`
+
+	valid, err := Validate([]byte(testSchema))
+	if err != nil {
+		t.Fatalf(`expected error to be empty, got: %s`, err.Error())
+	} else if !valid {
+		t.Fatal(`expected document to be valid`)
+	}
+}
+
 // TestParse runs through all of the test suite's tests (including optional)
 func TestParseAndValidate(t *testing.T) {
 	for _, testSchemaVersions := range testSchemaVersions {

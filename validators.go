@@ -23,7 +23,7 @@ type validatorFunc func(value []byte, vt ValueType, schema *Schema) error
 
 // TODO: Benchmark whether by ref or by pointer is the most performant
 
-func Validate(value []byte, vt ValueType, schema *Schema) error {
+func validate(value []byte, vt ValueType, schema *Schema) error {
 	var err error
 
 	if schema == nil {
@@ -86,7 +86,7 @@ func validateRef(value []byte, vt ValueType, schema *Schema) error {
 		return err
 	}
 
-	return Validate(value, vt, refSchema)
+	return validate(value, vt, refSchema)
 }
 
 func validateItems(value []byte, vt ValueType, schema *Schema) error {
@@ -134,7 +134,7 @@ func validateItems(value []byte, vt ValueType, schema *Schema) error {
 		}
 
 		if schema.Contains != nil {
-			err := Validate(value, ValueType(dataType), schema.Contains)
+			err := validate(value, ValueType(dataType), schema.Contains)
 			if err == nil {
 				contains = true
 			}
@@ -145,11 +145,11 @@ func validateItems(value []byte, vt ValueType, schema *Schema) error {
 			// So do nothing
 
 		} else if schema.Items.Schema != nil {
-			err := Validate(value, ValueType(dataType), schema.Items.Schema)
+			err := validate(value, ValueType(dataType), schema.Items.Schema)
 			errs = addError(err, errs)
 
 		} else if schema.Items.Schemas != nil && idx < len(*schema.Items.Schemas) {
-			err := Validate(value, ValueType(dataType), (*schema.Items.Schemas)[idx])
+			err := validate(value, ValueType(dataType), (*schema.Items.Schemas)[idx])
 			errs = addError(err, errs)
 
 		} else if schema.AdditionalItems == nil {
@@ -158,7 +158,7 @@ func validateItems(value []byte, vt ValueType, schema *Schema) error {
 
 		} else if schema.AdditionalItems != nil && (schema.IsDraft4() || len(*schema.Items.Schemas) > 0) {
 			// Only draft 4 allows addtionalItems without items as well
-			err := Validate(value, ValueType(dataType), schema.AdditionalItems)
+			err := validate(value, ValueType(dataType), schema.AdditionalItems)
 			errs = addError(err, errs)
 
 		} else {
@@ -234,7 +234,7 @@ func validateProperties(value []byte, vt ValueType, schema *Schema) error {
 				hasSchema = true
 				for _, subSchema := range subSchemas {
 					if subSchema != nil {
-						err := Validate(value, ValueType(dataType), subSchema)
+						err := validate(value, ValueType(dataType), subSchema)
 						if err != nil {
 							return err
 						}
@@ -248,7 +248,7 @@ func validateProperties(value []byte, vt ValueType, schema *Schema) error {
 		}
 
 		if subSchema != nil {
-			return Validate(value, ValueType(dataType), subSchema)
+			return validate(value, ValueType(dataType), subSchema)
 		}
 		return nil
 	})
@@ -310,7 +310,7 @@ func validatePropertyNames(value []byte, vt ValueType, schema *Schema) error {
 	}
 
 	return jsonparser.ObjectEach(value, func(key []byte, value []byte, dataType jsonparser.ValueType, offset int) error {
-		return Validate(key, String, schema.PropertyNames)
+		return validate(key, String, schema.PropertyNames)
 	})
 }
 
@@ -435,7 +435,7 @@ func validateDependencies(value []byte, vt ValueType, schema *Schema) error {
 			err := validateRequired(value, vt, &Schema{Required: dep.Strings})
 			errs = addError(err, errs)
 		} else if dep.Schema != nil {
-			err := Validate(value, vt, dep.Schema)
+			err := validate(value, vt, dep.Schema)
 			errs = addError(err, errs)
 		}
 	}, paths...)
@@ -445,7 +445,7 @@ func validateDependencies(value []byte, vt ValueType, schema *Schema) error {
 
 func validateAllOf(value []byte, vt ValueType, schema *Schema) error {
 	for _, subSchema := range *schema.AllOf {
-		err := Validate(value, vt, subSchema)
+		err := validate(value, vt, subSchema)
 		if err != nil {
 			return err
 		}
@@ -456,7 +456,7 @@ func validateAllOf(value []byte, vt ValueType, schema *Schema) error {
 
 func validateAnyOf(value []byte, vt ValueType, schema *Schema) error {
 	for _, subSchema := range *schema.AnyOf {
-		err := Validate(value, vt, subSchema)
+		err := validate(value, vt, subSchema)
 		if err == nil {
 			return nil
 		}
@@ -469,7 +469,7 @@ func validateOneOf(value []byte, vt ValueType, schema *Schema) error {
 	valid := false
 
 	for _, subSchema := range *schema.OneOf {
-		err := Validate(value, vt, subSchema)
+		err := validate(value, vt, subSchema)
 		if err == nil {
 			if !valid {
 				valid = true
@@ -487,7 +487,7 @@ func validateOneOf(value []byte, vt ValueType, schema *Schema) error {
 }
 
 func validateNot(value []byte, vt ValueType, schema *Schema) error {
-	err := Validate(value, vt, schema.Not)
+	err := validate(value, vt, schema.Not)
 	if err == nil {
 		return errors.New("value should NOT match schema")
 	}
@@ -639,16 +639,16 @@ func validateConst(value []byte, vt ValueType, schema *Schema) error {
 }
 
 func validateIf(value []byte, vt ValueType, schema *Schema) error {
-	err := Validate(value, vt, schema.If)
+	err := validate(value, vt, schema.If)
 	if err == nil && schema.Then != nil {
-		return Validate(value, vt, schema.Then)
+		return validate(value, vt, schema.Then)
 
 	} else if err == nil && schema.Then == nil {
 		// Same as Then being true (valid or schema true?)
 		return nil
 
 	} else if err != nil && schema.Else != nil {
-		return Validate(value, vt, schema.Else)
+		return validate(value, vt, schema.Else)
 
 	} else if err != nil && schema.Else == nil {
 		// Same as Else being true (valid or schema true?)

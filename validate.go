@@ -1,6 +1,30 @@
 package jsonschema
 
-import "strings"
+import (
+	"strings"
+
+	"github.com/buger/jsonparser"
+)
+
+// Validate will get $schema if it exists or fall back to latest supported Draft
+func Validate(jsonDoc []byte) (bool, error) {
+	var err error
+	var schema *Schema
+
+	val, vt, _, err := jsonparser.Get(jsonDoc, "$schema")
+	if err == nil && vt == jsonparser.String {
+		strVal := string(val)
+		schema, err = schema.ResolveRef(&Ref{String: &strVal})
+		if err == nil {
+			return false, err
+		}
+
+	} else {
+		schema = Draft07Schema
+	}
+
+	return schema.Validate(jsonDoc)
+}
 
 // Validate will return on the first encounter of something invalid
 func (s *Schema) Validate(jsonDoc []byte) (bool, error) {
@@ -19,7 +43,7 @@ func (s *Schema) Validate(jsonDoc []byte) (bool, error) {
 		typ = Number
 	}
 
-	err = Validate(jsonDoc, typ, s)
+	err = validate(jsonDoc, typ, s)
 	if err != nil {
 		return false, err
 	}
