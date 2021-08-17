@@ -171,7 +171,7 @@ func (s Schema) MarshalJSON() ([]byte, error) {
 	}
 
 	if s.Ref != nil && s.Ref.Schema != nil {
-		if s.Ref.marshalled > 1 {
+		if s.Ref.marshalled > 2 {
 			return []byte(fmt.Sprintf(`{"$ref": "%s"}`, *s.Ref.String)), nil
 		}
 
