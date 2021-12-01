@@ -10,7 +10,7 @@ import (
 	"path"
 	"testing"
 
-	"github.com/flowstack-com/go-jsonschema/testtools"
+	"github.com/flowstack/go-jsonschema/testtools"
 	"github.com/xeipuuv/gojsonschema"
 )
 
