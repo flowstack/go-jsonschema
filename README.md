@@ -15,7 +15,7 @@ Currently most test for Draft 2019-09 and Draft 2020-12 passes, but there is mor
 The JSON Schema parser is fairly slow and could probably be made faster easily.
 
 
-## Motivation for creating yet a JSON Schema parser / validator
+## Motivation for creating yet another JSON Schema parser / validator
 The very nice and [gojsonschema](http://github.com/xeipuuv/gojsonschema) was missing some features and we needed some internal functionality, that was hard to build on top of [gojsonschema](http://github.com/xeipuuv/gojsonschema).
 
 Furthermore [gojsonschema](http://github.com/xeipuuv/gojsonschema) uses Go's JSON parser, which makes it relatively slow, when parsing JSON documents for validation.  
