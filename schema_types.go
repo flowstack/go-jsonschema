@@ -1,39 +1,45 @@
 package jsonschema
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
 	"log"
+	"strings"
 
 	"github.com/buger/jsonparser"
 )
 
 type refs []*Ref
 
-func (r *refs) String() {
+func (r *refs) String() string {
+	str := ""
 	if r != nil {
 		for _, r := range *r {
 			if r != nil && r.String != nil {
-				log.Printf("ref %s\n", *r.String)
+				str += fmt.Sprintf("ref %s\n", *r.String)
 			} else {
-				log.Printf("empty ref found\n")
+				str += "empty ref found\n"
 			}
 		}
 	}
+	return str
 }
 
 type pointers map[string]*Schema
 
-func (p *pointers) String() {
+func (p *pointers) String() string {
+	str := ""
 	if p != nil {
 		for k, s := range *p {
 			if s != nil {
-				log.Printf("pointer for %s\n%s\n", k, s.String())
+				str += fmt.Sprintf("pointer for %s\n%s\n", k, s.String())
 			} else {
-				log.Printf("pointer for %s is empty\n", k)
+				str += fmt.Sprintf("pointer for %s is empty\n", k)
 			}
 		}
 	}
+	return str
 }
 
 type ValueType uint8
@@ -282,26 +288,48 @@ func NewDependencies(jsonVal []byte, vt jsonparser.ValueType, parentSchema *Sche
 	return nil, fmt.Errorf("expected properties to be object, got: %s", vt.String())
 }
 
-type Properties map[string]*Schema
-type tmpProperties Properties // To ensure MarshalJSON doesn't go haywire
+// Properties are build like this, instead of map[string]*Schema,
+// to make it possible to Marshal with original sort order of fields
+type NamedProperty struct {
+	Name     string
+	Property *Schema
+}
+type Properties []*NamedProperty
+
+// type tmpProperties Properties // To ensure MarshalJSON doesn't go haywire
+
+func (p Properties) GetProperty(name string) (*NamedProperty, bool) {
+	for _, prop := range p {
+		if prop.Name == name {
+			return prop, true
+		}
+	}
+	return nil, false
+}
 
 func (p Properties) MarshalJSON() ([]byte, error) {
-	// tmp := tmpProperties{}
+	propsData := []byte("{")
+	buf := bytes.NewBuffer(propsData)
+	for i, prop := range p {
+		fieldVal, err := json.Marshal(prop.Property)
+		if err != nil {
+			log.Println(err)
+			return nil, err
+		}
+		escapedFieldName := strings.ReplaceAll(prop.Name, `\`, `\\`)
+		escapedFieldName = strings.ReplaceAll(escapedFieldName, `"`, `\"`)
+		escapedFieldName = strings.ReplaceAll(escapedFieldName, "\n", `\n`)
+		escapedFieldName = strings.ReplaceAll(escapedFieldName, "\r", `\r`)
+		escapedFieldName = strings.ReplaceAll(escapedFieldName, "\t", `\t`)
+		escapedFieldName = strings.ReplaceAll(escapedFieldName, "\f", `\u000c`)
+		fmt.Fprintf(buf, `"%s": %s`, escapedFieldName, string(fieldVal))
+		if i < len(p)-1 {
+			fmt.Fprint(buf, `,`)
+		}
+	}
+	fmt.Fprint(buf, `}`)
 
-	// for k, v := range p {
-	// 	log.Println(k)
-	// 	if v.Ref != nil && v.Ref.Schema != nil {
-	// 		log.Println("Yep")
-	// 		tmp[k] = v.Ref.Schema
-	// 	} else {
-	// 		tmp[k] = v
-	// 	}
-	// }
-
-	// b, err := json.Marshal(tmp)
-
-	b, err := json.Marshal(tmpProperties(p))
-	return b, err
+	return buf.Bytes(), nil
 }
 
 func NewProperties(jsonVal []byte, vt jsonparser.ValueType, parentSchema *Schema) (*Properties, error) {
@@ -309,7 +337,14 @@ func NewProperties(jsonVal []byte, vt jsonparser.ValueType, parentSchema *Schema
 		props := Properties{}
 		err := jsonparser.ObjectEach(jsonVal, func(key []byte, value []byte, dataType jsonparser.ValueType, offset int) error {
 			var err error
-			props[string(key)], err = parentSchema.Parse(value)
+			prop := &NamedProperty{
+				Name: string(key),
+			}
+			prop.Property, err = parentSchema.Parse(value)
+			if err != nil {
+				return err
+			}
+			props = append(props, prop)
 			return err
 		})
 
@@ -323,32 +358,33 @@ func NewProperties(jsonVal []byte, vt jsonparser.ValueType, parentSchema *Schema
 	return nil, fmt.Errorf("expected properties to be object, got: %s", vt.String())
 }
 
-type Definitions map[string]*Schema
-type tmpDefinitions Definitions // To ensure MarshalJSON doesn't go haywire
+// type Definitions map[string]*Schema
+// type tmpDefinitions Definitions // To ensure MarshalJSON doesn't go haywire
 
-func (p Definitions) MarshalJSON() ([]byte, error) {
-	b, err := json.Marshal(tmpDefinitions(p))
-	return b, err
-}
+// func (p Definitions) MarshalJSON() ([]byte, error) {
+// 	b, err := json.Marshal(tmpDefinitions(p))
+// 	return b, err
+// }
 
-func NewDefinitions(jsonVal []byte, vt jsonparser.ValueType, parentSchema *Schema) (*Properties, error) {
-	if vt == jsonparser.Object {
-		props := Properties{}
-		err := jsonparser.ObjectEach(jsonVal, func(key []byte, value []byte, dataType jsonparser.ValueType, offset int) error {
-			var err error
-			props[string(key)], err = parentSchema.Parse(value)
-			return err
-		})
+// func NewDefinitions(jsonVal []byte, vt jsonparser.ValueType, parentSchema *Schema) (*Properties, error) {
+// 	if vt == jsonparser.Object {
+// 		props := Properties{schemas: map[string]*Schema{}, sortedFields: []string{}}
+// 		err := jsonparser.ObjectEach(jsonVal, func(key []byte, value []byte, dataType jsonparser.ValueType, offset int) error {
+// 			var err error
+// 			props.schemas[string(key)], err = parentSchema.Parse(value)
+// 			props.sortedFields = append(props.sortedFields, string(key))
+// 			return err
+// 		})
 
-		if err != nil {
-			return nil, err
-		}
+// 		if err != nil {
+// 			return nil, err
+// 		}
 
-		return &props, nil
-	}
+// 		return &props, nil
+// 	}
 
-	return nil, fmt.Errorf("expected properties to be object, got: %s", vt.String())
-}
+// 	return nil, fmt.Errorf("expected properties to be object, got: %s", vt.String())
+// }
 
 type Schemas []*Schema
 type tmpSchemas Schemas // To ensure MarshalJSON doesn't go haywire

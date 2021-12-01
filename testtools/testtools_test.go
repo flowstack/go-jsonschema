@@ -6,7 +6,7 @@ func TestCompareJSON(t *testing.T) {
 	j1 := []byte(`{ "a": "a", "b": "b" }`)
 	j2 := []byte(`{ "b": "b", "a": "a" }`)
 
-	eq, err := compareJSON(j1, j2)
+	eq, err := CompareJSON(j1, j2)
 	if err != nil {
 		t.Fatal(err)
 	}

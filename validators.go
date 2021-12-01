@@ -61,7 +61,7 @@ func validateValue(value []byte, vt ValueType, schema *Schema) error {
 	return nil
 }
 
-func validateBoolean(value []byte, vt ValueType, schema *Schema) error {
+func validateBooleanSchema(value []byte, vt ValueType, schema *Schema) error {
 	// Start by checking for empty JSON value
 	if len(value) == 0 {
 		// If we have an empty value and a boolean false schema then the value is valid
@@ -216,7 +216,7 @@ func validateProperties(value []byte, vt ValueType, schema *Schema) error {
 		return nil
 	}
 
-	// Keep a counter for min and max porerties checks
+	// Keep a counter for min and max properties checks
 	var count int64
 	errs := jsonparser.ObjectEach(value, func(key []byte, value []byte, dataType jsonparser.ValueType, offset int) error {
 		count++
@@ -225,7 +225,11 @@ func validateProperties(value []byte, vt ValueType, schema *Schema) error {
 		var subSchema *Schema
 
 		if schema.Properties != nil {
-			subSchema, hasSchema = (*schema.Properties)[string(key)]
+			var subProp *NamedProperty
+			subProp, hasSchema = schema.Properties.GetProperty(string(key))
+			if hasSchema {
+				subSchema = subProp.Property
+			}
 		}
 
 		if schema.PatternProperties != nil {
@@ -233,6 +237,7 @@ func validateProperties(value []byte, vt ValueType, schema *Schema) error {
 			if len(subSchemas) > 0 {
 				hasSchema = true
 				for _, subSchema := range subSchemas {
+					subSchema.name = string(key)
 					if subSchema != nil {
 						err := validate(value, ValueType(dataType), subSchema)
 						if err != nil {
@@ -248,6 +253,7 @@ func validateProperties(value []byte, vt ValueType, schema *Schema) error {
 		}
 
 		if subSchema != nil {
+			subSchema.name = string(key)
 			return validate(value, ValueType(dataType), subSchema)
 		}
 		return nil

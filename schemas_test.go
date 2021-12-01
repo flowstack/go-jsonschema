@@ -41,6 +41,21 @@ func TestParserSimple(t *testing.T) {
 	}
 }
 
+func TestParserKeepSorting(t *testing.T) {
+	var testSchema = `{"$id":"bla","const":null,"properties":{"yadda":{"type":["string","null"]},"bla":{"enum":["abc",123,1.23,null,false]}}}`
+
+	schema, err := NewFromString(testSchema)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	parsedSchema := schema.String()
+
+	if testSchema != parsedSchema {
+		t.Fatalf("expected schemas to be equal, but got:\nexpected:\n%s\nactual:\n%s \n", testSchema, parsedSchema)
+	}
+}
+
 func TestItems(t *testing.T) {
 	var testSchema = `{"properties":{"itemField":{"type":"array","items":{"type":"string"}},"itemsField":{"type":"array","items":[{"type":"string"}]}}}`
 

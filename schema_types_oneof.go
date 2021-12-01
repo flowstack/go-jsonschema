@@ -57,7 +57,10 @@ type Type struct {
 	Strings *[]*string
 }
 
-func (t Type) Has(vt ValueType) bool {
+func (t *Type) Has(vt ValueType) bool {
+	if t == nil {
+		return false
+	}
 	if t.String != nil {
 		if vt.String() == *t.String {
 			return true
@@ -277,7 +280,6 @@ func NewValue(jsonVal []byte, vt jsonparser.ValueType) (*Value, error) {
 		val.String = &str
 	case jsonparser.Number:
 		var num *big.Float
-		// num, _, err = big.ParseFloat(string(jsonVal), 10, 53, big.ToNearestEven)
 		num, ok := new(big.Float).SetString(string(jsonVal))
 		if !ok {
 			err = errors.New("unable to parse value as number")

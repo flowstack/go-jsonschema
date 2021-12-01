@@ -43,6 +43,32 @@ func unescapeRefPath(refPath string) string {
 	return ref + frag
 }
 
+func escapeRefPath(refPath string) string {
+	var err error
+	var ref, frag string
+
+	refParts := strings.Split(refPath, "#")
+	if len(refParts) == 1 {
+		frag = refParts[0]
+	} else if len(refParts) > 1 {
+		ref = refParts[0]
+		frag = strings.Join(refParts[1:], "#")
+	}
+
+	frag, err = url.QueryUnescape(frag)
+	if err != nil {
+		return ""
+	}
+	frag = strings.ReplaceAll(frag, "~", "~0")
+	frag = strings.ReplaceAll(frag, "/", "~1")
+
+	if ref != "" && frag != "" {
+		return ref + "#" + frag
+	}
+
+	return ref + frag
+}
+
 // ExpandURI attempts to resolve a uri against the current Base URI
 func (s *Schema) ExpandURI(uri string) (*url.URL, error) {
 	// If uri is empty, it is seen as invalid
@@ -129,7 +155,7 @@ func (s *Schema) ResolveRef(ref *Ref) (*Schema, error) {
 	refStr := *ref.String
 
 	baseSchema := s
-	if s.baseURI == nil && s.base != nil {
+	if s != nil && s.baseURI == nil && s.base != nil {
 		baseSchema = s.base
 	}
 
@@ -155,21 +181,67 @@ func (s *Schema) ResolveRef(ref *Ref) (*Schema, error) {
 			return baseSchema, nil
 		}
 
-		for i, v := range pathParts {
-			if strings.Contains("0123456789", v) {
-				pathParts[i] = fmt.Sprintf("[%s]", v)
-			} else {
+		for i := 0; i < len(pathParts); i++ {
+			pathParts[i] = unescapeRefPath(pathParts[i])
+
+			switch pathParts[i] {
+			case "definitions":
+				if i >= (len(pathParts) - 1) {
+					return nil, errors.New("#/definitions is not a valid schema")
+				}
+				i++
 				pathParts[i] = unescapeRefPath(pathParts[i])
-			}
+				baseProp, ok := (*baseSchema.Definitions).GetProperty(pathParts[i])
+				if ok {
+					baseSchema = baseProp.Property
+				}
 
-			rawBase, _, _, err := jsonparser.Get(baseSchema.raw, pathParts[i])
-			if err != nil {
-				return nil, fmt.Errorf("unable to find schema at path: %s", *ref.String)
-			}
+			case "properties":
+				if i >= (len(pathParts) - 1) {
+					return nil, errors.New("#/properties is not a valid schema")
+				}
+				i++
+				pathParts[i] = unescapeRefPath(pathParts[i])
+				baseProp, ok := (*baseSchema.Properties).GetProperty(pathParts[i])
+				if ok {
+					baseSchema = baseProp.Property
+				}
 
-			baseSchema, err = baseSchema.Parse(rawBase)
-			if err != nil {
-				return nil, fmt.Errorf("unable to find schema at path: %s", *ref.String)
+			case "items":
+				if baseSchema.Items.Boolean != nil {
+					baseSchema = &Schema{boolean: baseSchema.boolean}
+				} else if baseSchema.Items.Schema != nil {
+					baseSchema = baseSchema.Items.Schema
+				}
+
+				if i >= (len(pathParts) - 1) {
+					return nil, errors.New("#/items is not a valid schema")
+				}
+				i++
+
+				idx, err := jsonparser.ParseInt([]byte(pathParts[i]))
+				if err != nil {
+					return nil, errors.New("unable to parse item's index")
+				}
+				baseSchema = (*baseSchema.Items.Schemas)[idx]
+
+			default:
+				if isInteger([]byte(pathParts[i])) {
+					pathParts[i] = fmt.Sprintf("[%s]", pathParts[i])
+				} else {
+					pathParts[i] = unescapeRefPath(pathParts[i])
+				}
+
+				rawBase, _, _, err := jsonparser.Get(baseSchema.raw, pathParts[i])
+				if err != nil {
+					return nil, fmt.Errorf("unable to find schema at path: %s", *ref.String)
+				}
+
+				baseSchema, err = baseSchema.Parse(rawBase)
+				if err != nil {
+					return nil, fmt.Errorf("unable to find schema at path: %s", *ref.String)
+				}
+
 			}
 		}
 

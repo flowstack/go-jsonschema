@@ -8,7 +8,7 @@ import (
 )
 
 func (s *Schema) Parse(jsonSchema []byte) (*Schema, error) {
-	schema := &Schema{raw: jsonSchema}
+	schema := &Schema{raw: jsonSchema, circularThreshold: 3}
 
 	if s == nil {
 		schema.pointers = &pointers{}
@@ -133,7 +133,7 @@ func (s *Schema) Parse(jsonSchema []byte) (*Schema, error) {
 			schema.WriteOnly = &tmpBool
 			errs = addError(err, errs)
 		case PropDefinitions:
-			schema.Definitions, err = NewDefinitions(value, vt, schema)
+			schema.Definitions, err = NewProperties(value, vt, schema)
 			errs = addError(err, errs)
 		case PropIf:
 			schema.If, err = schema.Parse(value)
@@ -183,13 +183,13 @@ func (s *Schema) Parse(jsonSchema []byte) (*Schema, error) {
 			// Pre-compile the regexps
 			if schema.PatternProperties != nil {
 				schema.patternPropertiesRegexps = &map[string]*regexp.Regexp{}
-				for reStr := range *schema.PatternProperties {
-					reStr = convertRegexp(reStr)
+				for _, prop := range *schema.PatternProperties {
+					reStr := convertRegexp(prop.Name)
 					re, err := regexp.Compile(reStr)
 					if err != nil {
 						errs = addError(err, errs)
 					} else {
-						(*schema.patternPropertiesRegexps)[reStr] = re
+						(*schema.patternPropertiesRegexps)[prop.Name] = re
 					}
 				}
 			}
@@ -318,7 +318,7 @@ func (s *Schema) setupValidators() {
 	s.validators = append(s.validators, validateValue)
 
 	if s.boolean != nil {
-		s.validators = append(s.validators, validateBoolean)
+		s.validators = append(s.validators, validateBooleanSchema)
 	}
 
 	if s.Ref != nil {

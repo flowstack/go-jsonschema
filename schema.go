@@ -1,8 +1,8 @@
 package jsonschema
 
 import (
+	"bytes"
 	"encoding/json"
-	"fmt"
 	"net/url"
 	"regexp"
 	"strconv"
@@ -18,25 +18,32 @@ func NewFromString(schema string) (*Schema, error) {
 	return New([]byte(schema))
 }
 
-type tmpSchema Schema // To ensure MarshalJSON doesn't go haywire
+func (s *Schema) SetCircularRefThresHold(threshold int) {
+	s.circularThreshold = threshold
+}
+
+// This it to ensure MarshalJSON doesn't go haywire
+type tmpSchema Schema
 
 type Schema struct {
-	// These are used to be able to reference and de-reference.
+	// name contains e.g. the property name, under which this schema was found.
+	// It may not always contain a name, but should at least for schemas with type object.
+	name string
 
-	// Raw contains the ray json schema - necessary in some special cases
+	// raw contains the raw json schema - necessary in some special cases like de-ref $refs
 	raw []byte
 
 	// Root schema is the top most schema.
 	root *Schema
 
-	// Base schema is the nearest schema, up the stack, with a non-pointer (#xxx) ($)id set
-	base *Schema
-
 	// Parent schema is the nearest schema, up the stack
 	parent *Schema
 
-	// This is to make it easier to deal with true / false schemas and avoid having a Schema
-	boolean *bool
+	// Base schema is the nearest schema, up the stack, with a non-pointer (#xxx) ($)id set
+	base *Schema
+
+	// baseURI is present on any schema with an $id
+	baseURI *url.URL
 
 	// pointers holds references to schemas with ($)id, collected during parsing - the map key is ($)id
 	pointers *pointers
@@ -45,17 +52,21 @@ type Schema struct {
 	// These should only be present on the root schema.
 	refs *refs
 
-	// baseURI is present on any schema with an $id
-	baseURI *url.URL
+	// circularThreshold is the threshold for when to stop resolving $refs and just print the $ref string
+	// Should only be set on root
+	circularThreshold int
 
 	// Not sure this is the way to go
 	// Array of validator functions.
 	// These are added after checking for all possible constraints
 	validators []validatorFunc
 
-	Schema    *string `json:"$schema,omitempty"` // If set, must be http://json-schema.org/draft-07/schema#
-	ID        *string `json:"$id,omitempty"`     // NOTE: draft-04 has id instead if $id
-	IDDraft04 *string `json:"id,omitempty"`      // NOTE: draft-04 has id instead if $id
+	// This is to make it easier to deal with true / false schemas
+	boolean *bool
+
+	Schema    *string `json:"$schema,omitempty"`
+	ID        *string `json:"$id,omitempty"` // NOTE: draft-04 has id instead if $id
+	IDDraft04 *string `json:"id,omitempty"`  // NOTE: draft-04 has id instead if $id
 	Ref       *Ref    `json:"$ref,omitempty"`
 	Comment   *string `json:"$comment,omitempty"`
 
@@ -164,20 +175,48 @@ func (s Schema) MarshalJSON() ([]byte, error) {
 		return []byte(strconv.FormatBool(*s.boolean)), nil
 	}
 
+	// Reset the refs' counters, if this is the root object being marshalled
 	if s.root == nil && s.refs != nil {
 		for _, ref := range *s.refs {
 			ref.marshalled = 0
 		}
 	}
 
-	if s.Ref != nil && s.Ref.Schema != nil {
-		if s.Ref.marshalled > 2 {
-			return []byte(fmt.Sprintf(`{"$ref": "%s"}`, *s.Ref.String)), nil
+	circularThreshold := s.circularThreshold
+	if s.root != nil {
+		circularThreshold = s.root.circularThreshold
+	}
+
+	if s.Ref != nil && s.Ref.Schema != nil && s.Ref.marshalled < circularThreshold {
+		s.Ref.marshalled++
+		b, err := json.Marshal(tmpSchema(*s.Ref.Schema))
+		// TODO: Why is this set to 0???
+		s.Ref.marshalled = 0
+		return b, err
+
+	} else if s.Ref != nil && s.Ref.String != nil {
+		// All of the following is basically to make it possible to keep ignored properties
+		// and marshal them back - otherwise we could just do this:
+		// return []byte(fmt.Sprintf(`{"$ref": "%s"}`, *s.Ref.String)), nil
+
+		// Make a copy of the schema
+		newSchema, err := New(s.raw)
+		if err != nil {
+			return nil, err
 		}
 
-		s.Ref.marshalled++
+		// Remove any ites, properties and definitions, that might hold more $refs
+		// newSchema.Items = nil
+		// newSchema.Properties = nil
+		// newSchema.Definitions = nil
 
-		return json.Marshal(tmpSchema(*s.Ref.Schema))
+		// Set the ref again, but without the Schema part
+		newSchema.Ref = &Ref{
+			String: s.Ref.String,
+		}
+
+		// Now marshal the new schema without refs
+		return json.Marshal(tmpSchema(*newSchema))
 	}
 
 	b, err := json.Marshal(tmpSchema(s))
@@ -193,6 +232,13 @@ func (s Schema) String() string {
 	return string(schema)
 }
 
+func (s Schema) Pretty() string {
+	schema := s.String()
+	var out bytes.Buffer
+	json.Indent(&out, []byte(schema), "", "  ")
+	return out.String()
+}
+
 func (s *Schema) findPatternProperties(key []byte) []*Schema {
 	if s.patternPropertiesRegexps == nil {
 		return nil
@@ -201,7 +247,10 @@ func (s *Schema) findPatternProperties(key []byte) []*Schema {
 	schemas := []*Schema{}
 	for reStr, re := range *s.patternPropertiesRegexps {
 		if re.Match(key) {
-			schemas = append(schemas, (*s.PatternProperties)[reStr])
+			prop, ok := (*s.PatternProperties).GetProperty(reStr)
+			if ok {
+				schemas = append(schemas, prop.Property)
+			}
 		}
 	}
 
@@ -211,19 +260,6 @@ func (s *Schema) findPatternProperties(key []byte) []*Schema {
 
 	return nil
 }
-
-// func (s *Schema) findPatternProperty(key []byte) (*Schema, bool) {
-// 	if s.patternPropertiesRegexps == nil {
-// 		return nil, false
-// 	}
-
-// 	for reStr, re := range *s.patternPropertiesRegexps {
-// 		if re.Match(key) {
-// 			return (*s.PatternProperties)[reStr], true
-// 		}
-// 	}
-// 	return nil, false
-// }
 
 func (s Schema) IsDraft4() bool {
 	if s.Schema != nil {
@@ -260,6 +296,14 @@ func (s Schema) GetID() string {
 	}
 
 	return ""
+}
+
+func (s *Schema) SetID(id string) {
+	if s.IsDraft4() {
+		*s.IDDraft04 = id
+	} else {
+		*s.ID = id
+	}
 }
 
 // Checks if everything is nil and thereby an empty schema, similar to a "true" schema

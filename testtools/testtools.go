@@ -5,7 +5,7 @@ import (
 	"encoding/json"
 )
 
-func compareJSON(j1, j2 []byte) (bool, error) {
+func CompareJSON(j1, j2 []byte) (bool, error) {
 	var err error
 
 	j1, err = SortAndCompactJSON(j1)

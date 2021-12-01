@@ -15,7 +15,7 @@ var deRefTests = []struct {
 	},
 	{
 		schema:         `{"$schema":"http://json-schema.org/draft-04/schema#","properties":{"foo":{"$ref":"#"}},"additionalProperties":false}`,
-		expectedSchema: `{"$schema":"http://json-schema.org/draft-04/schema#","properties":{"foo":{"$schema":"http://json-schema.org/draft-04/schema#","properties":{"foo":{"$schema":"http://json-schema.org/draft-04/schema#","properties":{"foo":{"$ref":"#"}},"additionalProperties":false}},"additionalProperties":false}},"additionalProperties":false}`,
+		expectedSchema: `{"$schema":"http://json-schema.org/draft-04/schema#","properties":{"foo":{"$schema":"http://json-schema.org/draft-04/schema#","properties":{"foo":{"$schema":"http://json-schema.org/draft-04/schema#","properties":{"foo":{"$schema":"http://json-schema.org/draft-04/schema#","properties":{"foo":{"$ref":"#"}},"additionalProperties":false}},"additionalProperties":false}},"additionalProperties":false}},"additionalProperties":false}`,
 	},
 }
 
