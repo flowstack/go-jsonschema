@@ -1,4 +1,4 @@
-[![Go Reference](https://pkg.go.dev/badge/github.com/flowstack-com/jsonschema.svg)](https://pkg.go.dev/github.com/flowstack-com/jsonschema)
+[![Go Reference](https://pkg.go.dev/badge/github.com/flowstack-com/go-jsonschema.svg)](https://pkg.go.dev/github.com/flowstack-com/go-jsonschema)
 
 # jsonschema
 Go JSON Schema parser and validator
