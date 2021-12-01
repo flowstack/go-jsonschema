@@ -1,6 +1,6 @@
 [![Go Reference](https://pkg.go.dev/badge/github.com/flowstack-com/go-jsonschema.svg)](https://pkg.go.dev/github.com/flowstack-com/go-jsonschema)
 
-# jsonschema
+# jsonschema [WIP]
 Go JSON Schema parser and validator
 
 Although this is a work in progress, it already passes all mandatory tests and most optional tests in the test suites for Draft 4, Draft 6 and Draft 7.
