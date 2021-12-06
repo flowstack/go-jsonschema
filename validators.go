@@ -330,7 +330,7 @@ func validateType(value []byte, vt ValueType, schema *Schema) error {
 		if *schema.Type.String == "integer" && vt == Number && isInteger(value) {
 			// In Draft 4 the value 1.0 can NOT be an integer all other drafts allows this
 			if schema.IsDraft4() && strings.Contains(string(value), ".") {
-				return fmt.Errorf("value is of type %s, but should be of type: %s", vt, *schema.Type.String)
+				return fmt.Errorf(`value "%s" is of type %s, but should be of type: %s`, value, vt, *schema.Type.String)
 			}
 			return nil
 		}
@@ -342,7 +342,7 @@ func validateType(value []byte, vt ValueType, schema *Schema) error {
 			return nil
 		}
 
-		return fmt.Errorf("value is of type %s, but should be of type: %s", vt, *schema.Type.String)
+		return fmt.Errorf(`value "%s" is of type %s, but should be of type: %s`, value, vt, *schema.Type.String)
 
 	} else if schema.Type.Strings != nil {
 		for _, t := range *schema.Type.Strings {
@@ -359,7 +359,7 @@ func validateType(value []byte, vt ValueType, schema *Schema) error {
 			}
 		}
 
-		return fmt.Errorf("value is of type %s, but should be any of: %v", vt, schema.Type.Strings)
+		return fmt.Errorf(`value "%v" is of type %s, but should be of type: %s`, value, vt, *schema.Type.String)
 	}
 
 	return fmt.Errorf("unknown type")
