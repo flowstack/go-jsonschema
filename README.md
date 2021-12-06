@@ -5,6 +5,40 @@ Go JSON Schema parser and validator
 
 Although this is a work in progress, it already passes all mandatory tests and most optional tests in the test suites for Draft 4, Draft 6 and Draft 7.
 
+Errors are not very informative.
+E.g. line number, keys, values, etc. aren't reported back.  
+The main focus has been on speed and correctness, but error reporting should get better over time.
+
+## Usage
+```go
+import "github.com/flowstack/go-jsonschema"
+
+func main() {
+    schema := `{"properties": {"id": {"type": "string"}}}`
+
+    // Validate a JSON Schema
+    _, err := jsonschema.Validate(schema)
+    if err != nil {
+        log.Fatal(err)
+    }
+
+    // Create a validator
+    validator, err := jsonschema.NewFromString(schema)
+    // Or: validator, err := jsonschema.New([]byte(schema))
+    if err != nil {
+        log.Fatal(err)
+    }
+
+    // Validate a JSON document against the schema
+    json := `{"id": "123abc"}`
+    _, err = validator.Validate([]byte(json))
+    if err != nil {
+        log.Fatal(err)
+    }
+}
+```
+
+
 ## Contributions
 Contributions are very welcome! This project is young and could use more eyes and brains to make everything better.  
 So please fork, code and make pull requests.  
@@ -16,7 +50,7 @@ The JSON Schema parser is fairly slow and could probably be made faster easily.
 
 
 ## Motivation for creating yet another JSON Schema parser / validator
-The very nice and [gojsonschema](http://github.com/xeipuuv/gojsonschema) was missing some features and we needed some internal functionality, that was hard to build on top of [gojsonschema](http://github.com/xeipuuv/gojsonschema).
+The very nice [gojsonschema](http://github.com/xeipuuv/gojsonschema) was missing some features and we needed some internal functionality, that was hard to build on top of [gojsonschema](http://github.com/xeipuuv/gojsonschema).
 
 Furthermore [gojsonschema](http://github.com/xeipuuv/gojsonschema) uses Go's JSON parser, which makes it relatively slow, when parsing JSON documents for validation.  
 This module uses the excellent [jsonparser](https://github.com/buger/jsonparser), which is waaaay faster than Go's builtin parser.
