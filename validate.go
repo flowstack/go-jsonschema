@@ -1,6 +1,7 @@
 package jsonschema
 
 import (
+	"bytes"
 	"errors"
 	"strings"
 
@@ -32,6 +33,9 @@ func (s *Schema) Validate(jsonDoc []byte) (bool, error) {
 	if s == nil {
 		return false, errors.New("invalid schema")
 	}
+
+	// Ensure that datectors work (though it slows things down a bit)
+	jsonDoc = bytes.Trim(jsonDoc, " \r\n")
 
 	// It's valid to have a text string with quotes as document, but the Validate func
 	// expects non-quoted strings and the rest of the validators handles this automatically.
