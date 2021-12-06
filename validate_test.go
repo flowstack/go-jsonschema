@@ -107,6 +107,15 @@ func TestValidateEmptyDocWithSchema(t *testing.T) {
 	}
 }
 
+func TestValidateSchemaWithWrongSchema(t *testing.T) {
+	_, err := Validate([]byte(`{"$schema": "nosuchschema"}`))
+	if err == nil {
+		t.Fatal(`expected err`)
+	} else if err.Error() != "invalid schema" {
+		t.Fatalf("expected error to be:\ninvalid schema\n, got:\n%s", err.Error())
+	}
+}
+
 // TODO: verify that this is the wanted outcome
 func TestValidateEmptyDocWithFalseSchema(t *testing.T) {
 	schema, err := NewFromString("false")
