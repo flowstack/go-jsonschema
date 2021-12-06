@@ -359,7 +359,7 @@ func validateType(value []byte, vt ValueType, schema *Schema) error {
 			}
 		}
 
-		return fmt.Errorf(`value "%v" is of type %s, but should be of type: %s`, value, vt, *schema.Type.String)
+		return fmt.Errorf(`value "%v" is of type %s, but should be of type: %v`, value, vt, *schema.Type.Strings)
 	}
 
 	return fmt.Errorf("unknown type")
