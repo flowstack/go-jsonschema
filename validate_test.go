@@ -171,7 +171,7 @@ func TestValidateSchema(t *testing.T) {
 	}
 }
 
-// TestParse runs through all of the test suite's tests (including optional)
+// TestParseAndValidate runs through all of the test suite's tests (including optional)
 func TestParseAndValidate(t *testing.T) {
 	for _, testSchemaVersions := range testSchemaVersions {
 		dirPath := path.Join("./", testDataPath, testSchemaVersions)

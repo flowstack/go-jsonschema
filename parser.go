@@ -34,16 +34,13 @@ func (s *Schema) Parse(jsonSchema []byte) (*Schema, error) {
 
 	if b, err := jsonparser.ParseBoolean(jsonSchema); err == nil {
 		schema.boolean = &b
-
 		schema.setupValidators()
-
 		return schema, nil
 	}
 
 	var errs error
 
-	// Simplest solution for getting ($)id, which is needed for separation and de-ref'ing
-	// // Simplest solution for getting ($)id and $ref first, which is needed for separation and de-ref'ing
+	// Simplest solution for getting ($)id or $ref, which is needed for separation and de-ref'ing
 	jsonparser.EachKey(jsonSchema, func(idx int, value []byte, vt jsonparser.ValueType, err error) {
 		if err != nil {
 			errs = addError(err, errs)
@@ -94,13 +91,6 @@ func (s *Schema) Parse(jsonSchema []byte) (*Schema, error) {
 		}
 
 		switch SchemaProp(idx) {
-		// case PropID:
-		// 	schema.ID = NewStringPtr(value)
-		// case PropIDDraft04:
-		// 	schema.IDDraft04 = NewStringPtr(value)
-		// case PropRef:
-		// 	schema.Ref, err = NewRef(value, vt, schema)
-		// 	errs = addError(err, errs)
 		case PropSchema:
 			schema.Schema = NewStringPtr(value)
 		case PropComment:
@@ -282,7 +272,6 @@ func (s *Schema) setPointer(key string, schema *Schema) {
 
 func (s *Schema) getPointer(key string) *Schema {
 	if s != nil {
-
 		if s.baseURI != nil && s.baseURI.String() == key {
 			return s
 		}
@@ -330,37 +319,9 @@ func (s *Schema) setupValidators() {
 		s.validators = append(s.validators, validateItems)
 	}
 
-	// if s.AdditionalItems != nil {
-	// 	s.validators = append(s.validators, validateAdditionalItems)
-	// }
-	// if s.MaxItems != nil {
-	// 	s.validators = append(s.validators, validateMaxItems)
-	// }
-	// if s.MinItems != nil {
-	// 	s.validators = append(s.validators, validateMinItems)
-	// }
-	// if s.UniqueItems != nil {
-	// 	s.validators = append(s.validators, validateUniqueItems)
-	// }
-	// if s.Contains != nil {
-	// 	s.validators = append(s.validators, validateContains)
-	// }
-
 	if s.Properties != nil || s.PatternProperties != nil || s.AdditionalProperties != nil || s.MaxProperties != nil || s.MinProperties != nil {
 		s.validators = append(s.validators, validateProperties)
 	}
-	// if s.PatternProperties != nil {
-	// 	s.validators = append(s.validators, validatePatternProperties)
-	// }
-	// if s.AdditionalProperties != nil {
-	// 	s.validators = append(s.validators, validateAdditionalProperties)
-	// }
-	// if s.MaxProperties != nil {
-	// 	s.validators = append(s.validators, validateMaxProperties)
-	// }
-	// if s.MinProperties != nil {
-	// 	s.validators = append(s.validators, validateMinProperties)
-	// }
 
 	if s.PropertyNames != nil {
 		s.validators = append(s.validators, validatePropertyNames)
@@ -405,16 +366,10 @@ func (s *Schema) setupValidators() {
 	if s.Maximum != nil || s.ExclusiveMaximum != nil {
 		s.validators = append(s.validators, validateMaximum)
 	}
-	// if s.ExclusiveMaximum != nil {
-	// 	s.validators = append(s.validators, validateExclusiveMaximum)
-	// }
 
 	if s.Minimum != nil || s.ExclusiveMinimum != nil {
 		s.validators = append(s.validators, validateMinimum)
 	}
-	// if s.ExclusiveMinimum != nil {
-	// 	s.validators = append(s.validators, validateExclusiveMinimum)
-	// }
 
 	if s.MaxLength != nil {
 		s.validators = append(s.validators, validateMaxLength)

@@ -191,23 +191,6 @@ func validateItems(value []byte, vt ValueType, schema *Schema) error {
 	return errs
 }
 
-// Handled by ValidateItems
-// func validateAdditionalItems(value []byte, vt ValueType, schema *Schema) error {
-// 	return errors.New("ValidateAdditionalItems is not implemented yet")
-// }
-// func validateMaxItems(value []byte, vt ValueType, schema *Schema) error {
-// 	return errors.New("ValidateMaxItems is not implemented yet")
-// }
-// func validateMinItems(value []byte, vt ValueType, schema *Schema) error {
-// 	return errors.New("ValidateMinItems is not implemented yet")
-// }
-// func validateUniqueItems(value []byte, vt ValueType, schema *Schema) error {
-// 	return errors.New("ValidateUniqueItems is not implemented yet")
-// }
-// func validateContains(value []byte, vt ValueType, schema *Schema) error {
-// 	return errors.New("ValidateContains is not implemented yet")
-// }
-
 // Unless required, any property can be left out
 // Properties not defined in the schema are allowed, unless additionProperties == false
 func validateProperties(value []byte, vt ValueType, schema *Schema) error {

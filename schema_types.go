@@ -45,7 +45,7 @@ func (p *pointers) String() string {
 type ValueType uint8
 type SchemaProp uint8
 
-// These are the same as jsonparser.ValueType - except Integer, which jsonpparser does not have
+// These are the same as jsonparser.ValueType - except Integer, which jsonparser does not have
 const (
 	NotExist ValueType = iota
 	String
