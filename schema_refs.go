@@ -115,6 +115,19 @@ func (s *Schema) ExpandURI(uri string) (*url.URL, error) {
 	return uriParsed, nil
 }
 
+func (s *Schema) AddSchema(schema *Schema) error {
+	return s.AddSchemaString(schema.String())
+}
+
+func (s *Schema) AddSchemaString(schemaString string) error {
+	if s == nil {
+		return nil
+	}
+
+	_, err := s.Parse([]byte(schemaString))
+	return err
+}
+
 func (s *Schema) DeRef() error {
 	var err error
 
