@@ -223,6 +223,12 @@ func (s Schema) MarshalJSON() ([]byte, error) {
 	return b, err
 }
 
+func (s *Schema) UnmarshalJSON(schema []byte) error {
+	newSchema, err := New(schema)
+	*s = *newSchema
+	return err
+}
+
 func (s Schema) String() string {
 	schema, err := s.MarshalJSON()
 	if err != nil {
