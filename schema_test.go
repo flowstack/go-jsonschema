@@ -2,6 +2,7 @@ package jsonschema
 
 import (
 	"encoding/json"
+	"errors"
 	"testing"
 )
 
@@ -62,6 +63,52 @@ func TestItems(t *testing.T) {
 	schema, err := NewFromString(testSchema)
 	if err != nil {
 		t.Fatal(err)
+	}
+
+	newSchema, err := json.Marshal(schema)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if testSchema != string(newSchema) {
+		t.Fatalf("expected schemas to be equal, but got:\nexpected:\n%s\nactual:\n%s \n", testSchema, string(newSchema))
+	}
+}
+
+func TestUnknowns(t *testing.T) {
+	var testSchema = `{"someField":"someName","stringField":{"type":"string"}}`
+
+	schema, err := NewFromString(testSchema)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	stringField, err := schema.GetUnknown("stringField")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if stringField == nil {
+		t.Fatal(errors.New("unknown property stringField is nil"))
+	}
+	if stringField.Object == nil {
+		t.Fatal(errors.New("unknown property stringField is not an object"))
+	}
+	if typ, ok := (*stringField.Object)["type"]; !ok || *typ.String != "string" {
+		t.Fatal(errors.New(`unknown property stringField type is not "string"`))
+	}
+
+	someField, err := schema.GetUnknown("someField")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if someField == nil {
+		t.Fatal(errors.New("unknown property someField is nil"))
+	}
+	if someField.String == nil {
+		t.Fatal(errors.New("unknown property someField is not a string"))
+	}
+	if *someField.String != "someName" {
+		t.Fatal(errors.New(`unknown property someField is not "someName"`))
 	}
 
 	newSchema, err := json.Marshal(schema)

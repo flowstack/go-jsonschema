@@ -84,13 +84,20 @@ func (s *Schema) Parse(jsonSchema []byte) (*Schema, error) {
 		}
 	}
 
-	jsonparser.EachKey(jsonSchema, func(idx int, value []byte, vt jsonparser.ValueType, err error) {
-		if err != nil {
+	jsonparser.ObjectEach(jsonSchema, func(key []byte, value []byte, vt jsonparser.ValueType, offset int) error {
+		var err error
+
+		schemaProp, ok := nameToProp[string(key)]
+		if !ok {
+			if schema.unknownProps == nil {
+				schema.unknownProps = map[string]*Value{}
+			}
+			schema.unknownProps[string(key)], err = NewValue(value, vt)
 			errs = addError(err, errs)
-			return
+			return errs
 		}
 
-		switch SchemaProp(idx) {
+		switch schemaProp {
 		case PropSchema:
 			schema.Schema = NewStringPtr(value)
 		case PropComment:
@@ -245,7 +252,9 @@ func (s *Schema) Parse(jsonSchema []byte) (*Schema, error) {
 			schema.ExclusiveMinimum, err = NewValue(value, vt)
 			errs = addError(err, errs)
 		}
-	}, propNames...)
+
+		return errs
+	})
 
 	schema.setupValidators()
 

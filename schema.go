@@ -3,9 +3,12 @@ package jsonschema
 import (
 	"bytes"
 	"encoding/json"
+	"errors"
 	"net/url"
 	"regexp"
 	"strconv"
+
+	"github.com/buger/jsonparser"
 )
 
 func New(schema []byte) (*Schema, error) {
@@ -63,6 +66,11 @@ type Schema struct {
 
 	// This is to make it easier to deal with true / false schemas
 	boolean *bool
+
+	// Unknown properties and their values are stored, so they can be marshalled
+	unknownProps map[string]*Value
+
+	/* Schema definition fields */
 
 	Schema    *string `json:"$schema,omitempty"`
 	ID        *string `json:"$id,omitempty"` // NOTE: draft-04 has id instead if $id
@@ -170,6 +178,25 @@ type Schema struct {
 	ExclusiveMinimum *Value `json:"exclusiveMinimum,omitempty"` // bool in draft 4
 }
 
+func (s *Schema) SetUnknown(name string, val *Value) error {
+	if s.unknownProps == nil {
+		s.unknownProps = map[string]*Value{}
+	}
+	s.unknownProps[name] = val
+	return nil
+}
+
+func (s *Schema) GetUnknown(name string) (*Value, error) {
+	if s.unknownProps == nil {
+		return nil, errors.New("unknown property not found")
+	}
+	val, ok := s.unknownProps[name]
+	if !ok {
+		return nil, errors.New("unknown property not found")
+	}
+	return val, nil
+}
+
 func (s Schema) MarshalJSON() ([]byte, error) {
 	if s.boolean != nil {
 		return []byte(strconv.FormatBool(*s.boolean)), nil
@@ -205,7 +232,7 @@ func (s Schema) MarshalJSON() ([]byte, error) {
 			return nil, err
 		}
 
-		// Remove any ites, properties and definitions, that might hold more $refs
+		// Remove any items, properties and definitions, that might hold more $refs
 		// newSchema.Items = nil
 		// newSchema.Properties = nil
 		// newSchema.Definitions = nil
@@ -220,6 +247,19 @@ func (s Schema) MarshalJSON() ([]byte, error) {
 	}
 
 	b, err := json.Marshal(tmpSchema(s))
+
+	// Set unknown properties
+	for name, unknown := range s.unknownProps {
+		val, err := unknown.MarshalJSON()
+		if err != nil {
+			return nil, err
+		}
+		b, err = jsonparser.Set(b, val, name)
+		if err != nil {
+			return nil, err
+		}
+	}
+
 	return b, err
 }
 
@@ -316,6 +356,7 @@ func (s *Schema) SetID(id string) {
 // TODO: Update with 20xx-xx props
 func (s Schema) IsEmpty() bool {
 	return ((s.boolean == nil) &&
+		(s.unknownProps == nil) &&
 		(s.Schema == nil) &&
 		(s.ID == nil) &&
 		(s.IDDraft04 == nil) &&

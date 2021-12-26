@@ -235,11 +235,15 @@ type Value struct {
 	Number  *big.Float
 	Boolean *bool
 	Null    *bool
-	Object  *map[string]interface{}
-	Array   *[]interface{}
+	Object  *map[string]*Value
+	Array   *[]*Value
 
 	raw       []byte
 	valueType ValueType
+}
+
+func (v Value) Raw() []byte {
+	return v.raw
 }
 
 func (v Value) MarshalJSON() ([]byte, error) {
@@ -295,7 +299,7 @@ func NewValue(jsonVal []byte, vt jsonparser.ValueType) (*Value, error) {
 	case jsonparser.Object:
 		val.raw = sortObject(val.raw)
 
-		tmpObject := map[string]interface{}{}
+		tmpObject := map[string]*Value{}
 
 		err := jsonparser.ObjectEach(jsonVal, func(key []byte, value []byte, dataType jsonparser.ValueType, offset int) error {
 			var err error
@@ -310,7 +314,7 @@ func NewValue(jsonVal []byte, vt jsonparser.ValueType) (*Value, error) {
 		val.Object = &tmpObject
 
 	case jsonparser.Array:
-		tmpArray := []interface{}{}
+		tmpArray := []*Value{}
 		var errs error
 
 		jsonparser.ArrayEach(jsonVal, func(value []byte, dataType jsonparser.ValueType, offset int, parseErr error) {
