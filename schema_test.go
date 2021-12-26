@@ -76,25 +76,11 @@ func TestItems(t *testing.T) {
 }
 
 func TestUnknowns(t *testing.T) {
-	var testSchema = `{"someField":"someName","stringField":{"type":"string"}}`
+	var testSchema = `{"stringField":{"type":"string"},"someField":"someName"}`
 
 	schema, err := NewFromString(testSchema)
 	if err != nil {
 		t.Fatal(err)
-	}
-
-	stringField, err := schema.GetUnknown("stringField")
-	if err != nil {
-		t.Fatal(err)
-	}
-	if stringField == nil {
-		t.Fatal(errors.New("unknown property stringField is nil"))
-	}
-	if stringField.Object == nil {
-		t.Fatal(errors.New("unknown property stringField is not an object"))
-	}
-	if typ, ok := (*stringField.Object)["type"]; !ok || *typ.String != "string" {
-		t.Fatal(errors.New(`unknown property stringField type is not "string"`))
 	}
 
 	someField, err := schema.GetUnknown("someField")
@@ -109,6 +95,20 @@ func TestUnknowns(t *testing.T) {
 	}
 	if *someField.String != "someName" {
 		t.Fatal(errors.New(`unknown property someField is not "someName"`))
+	}
+
+	stringField, err := schema.GetUnknown("stringField")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if stringField == nil {
+		t.Fatal(errors.New("unknown property stringField is nil"))
+	}
+	if stringField.Object == nil {
+		t.Fatal(errors.New("unknown property stringField is not an object"))
+	}
+	if typ, ok := (*stringField.Object)["type"]; !ok || *typ.String != "string" {
+		t.Fatal(errors.New(`unknown property stringField type is not "string"`))
 	}
 
 	newSchema, err := json.Marshal(schema)
