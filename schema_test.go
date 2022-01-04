@@ -76,7 +76,7 @@ func TestItems(t *testing.T) {
 }
 
 func TestUnknowns(t *testing.T) {
-	var testSchema = `{"stringField":{"type":"string"},"someField":"someName"}`
+	var testSchema = `{"someField":"someName","stringField":{"type":"string"}}`
 
 	schema, err := NewFromString(testSchema)
 	if err != nil {

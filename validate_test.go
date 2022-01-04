@@ -9,6 +9,7 @@ import (
 	"os"
 	"path"
 	"testing"
+	"time"
 
 	"github.com/flowstack/go-jsonschema/testtools"
 	"github.com/xeipuuv/gojsonschema"
@@ -89,6 +90,9 @@ func TestMain(m *testing.M) {
 			panic(err)
 		}
 	}()
+
+	// Give the HTTP server a second to get started
+	time.Sleep(time.Second)
 
 	os.Exit(m.Run())
 }
