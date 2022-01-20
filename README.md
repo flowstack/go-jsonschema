@@ -14,7 +14,7 @@ Until the release of version 1.0, breaking changes can happen, but will be avoid
 
 ## Usage
 
-It is now possible to marshal and unmarshal schemas directly with [encoding/json]([encoding/json](https://pkg.go.dev/encoding/json)).  
+It is now possible to marshal and unmarshal schemas directly with [encoding/json](https://pkg.go.dev/encoding/json).  
 
 
 ### Validate JSON Schema
