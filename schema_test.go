@@ -77,6 +77,7 @@ func TestItems(t *testing.T) {
 
 func TestUnknowns(t *testing.T) {
 	var testSchema = `{"someField":"someName","stringField":{"type":"string"}}`
+	var testSchema2 = `{"stringField":{"type":"string"},"someField":"someName"}`
 
 	schema, err := NewFromString(testSchema)
 	if err != nil {
@@ -116,7 +117,7 @@ func TestUnknowns(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	if testSchema != string(newSchema) {
+	if testSchema != string(newSchema) && testSchema2 != string(newSchema) {
 		t.Fatalf("expected schemas to be equal, but got:\nexpected:\n%s\nactual:\n%s \n", testSchema, string(newSchema))
 	}
 }
