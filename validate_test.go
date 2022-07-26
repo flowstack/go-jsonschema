@@ -269,76 +269,78 @@ func parseAndValidateHelper(t *testing.T, dirPath, schemaVersion string) {
 
 		filePath := path.Join(dirPath, file.Name())
 
-		data, err := ioutil.ReadFile(filePath)
-		if err != nil {
-			t.Fatal(err)
-		}
+		t.Run(fmt.Sprintf("%s/%s", path.Base(dirPath), file.Name()), func(t *testing.T) {
 
-		// Extract the tests into structs
-		schemaTests := []schemaTests{}
-		err = json.Unmarshal(data, &schemaTests)
-		if err != nil {
-			t.Fatalf("error while parsing: %s\nerror:%s", filePath, err.Error())
-		}
-
-		for i, schemaTest := range schemaTests {
-			// Parse the schema
-			schema, err := New(schemaTest.Schema)
-			if err != nil {
-				t.Fatalf("error while parsing: %s, test #%d\nerror: %s", filePath, i+1, err.Error())
-			}
-
-			// Verify that we actually have all the information
-			actualSchema, err := json.Marshal(schema)
-			if err != nil {
-				t.Fatalf("error while parsing: %s, test #%d\nerror: %s", filePath, i+1, err.Error())
-			}
-
-			expectedSchema, err := testtools.SortAndCompactJSON(schemaTest.Schema)
-			if err != nil {
-				t.Fatal(err)
-			}
-			actualSchema, err = testtools.SortAndCompactJSON(actualSchema)
+			data, err := ioutil.ReadFile(filePath)
 			if err != nil {
 				t.Fatal(err)
 			}
 
-			if string(expectedSchema) != string(actualSchema) {
-				// Allow match failure for testdata/draft*/unknownKeyword.json
-				// The schema has errors on purpose, so the parser SHOULD get something different
-				if file.Name() != "unknownKeyword.json" {
-					t.Fatalf(
-						"%s, test #%d\nexpected schemas to be equal, got:\nexpected:\n%s\nactual:\n%s \n",
-						filePath, i+1, string(expectedSchema), string(actualSchema))
+			// Extract the tests into structs
+			schemaTests := []schemaTests{}
+			err = json.Unmarshal(data, &schemaTests)
+			if err != nil {
+				t.Fatalf("error while parsing: %s\nerror:%s", filePath, err.Error())
+			}
+
+			for i, schemaTest := range schemaTests {
+				// Parse the schema
+				schema, err := New(schemaTest.Schema)
+				if err != nil {
+					t.Fatalf("error while parsing: %s, test #%d\nerror: %s", filePath, i+1, err.Error())
 				}
-			}
 
-			// Force set the $schema value, to ensure the parser / validators knows which version is expected
-			var schemaStr string
-			switch schemaVersion {
-			case "draft4":
-				schemaStr = "http://json-schema.org/draft-04/schema#"
-			case "draft6":
-				schemaStr = "http://json-schema.org/draft-06/schema#"
-			case "draft7":
-				schemaStr = "http://json-schema.org/draft-07/schema#"
-			}
-			schema.Schema = &schemaStr
+				// Verify that we actually have all the information
+				actualSchema, err := json.Marshal(schema)
+				if err != nil {
+					t.Fatalf("error while parsing: %s, test #%d\nerror: %s", filePath, i+1, err.Error())
+				}
 
-			// Go through the tests and check that the validations matches
-			for n, test := range schemaTest.Tests {
-				actual, err := schema.Validate(test.Data)
+				expectedSchema, err := testtools.SortAndCompactJSON(schemaTest.Schema)
+				if err != nil {
+					t.Fatal(err)
+				}
+				actualSchema, err = testtools.SortAndCompactJSON(actualSchema)
+				if err != nil {
+					t.Fatal(err)
+				}
 
-				if actual != test.Valid {
-					errStr := fmt.Sprintf("expected validation to be %t, got: %t\n", test.Valid, actual)
-					if err != nil {
-						errStr += err.Error() + "\n\n"
+				if string(expectedSchema) != string(actualSchema) {
+					// Allow match failure for testdata/draft*/unknownKeyword.json
+					// The schema has errors on purpose, so the parser SHOULD get something different
+					if file.Name() != "unknownKeyword.json" {
+						t.Fatalf(
+							"%s, test #%d\nexpected schemas to be equal, got:\nexpected:\n%s\nactual:\n%s \n",
+							filePath, i+1, string(expectedSchema), string(actualSchema))
 					}
+				}
 
-					if errStr != "" {
-						errStr = "errors encountered:\n" + errStr
+				// Force set the $schema value, to ensure the parser / validators knows which version is expected
+				var schemaStr string
+				switch schemaVersion {
+				case "draft4":
+					schemaStr = "http://json-schema.org/draft-04/schema#"
+				case "draft6":
+					schemaStr = "http://json-schema.org/draft-06/schema#"
+				case "draft7":
+					schemaStr = "http://json-schema.org/draft-07/schema#"
+				}
+				schema.Schema = &schemaStr
 
-						t.Fatalf(`%s,
+				// Go through the tests and check that the validations matches
+				for n, test := range schemaTest.Tests {
+					actual, err := schema.Validate(test.Data)
+
+					if actual != test.Valid {
+						errStr := fmt.Sprintf("expected validation to be %t, got: %t\n", test.Valid, actual)
+						if err != nil {
+							errStr += err.Error() + "\n\n"
+						}
+
+						if errStr != "" {
+							errStr = "errors encountered:\n" + errStr
+
+							t.Fatalf(`%s,
 Test #%d.%d: "%s"
 
 %sSchema:
@@ -346,30 +348,30 @@ Test #%d.%d: "%s"
 
 Test document:
 %s`,
-							filePath, i+1, n+1, test.Description, errStr, string(schemaTest.Schema), string(test.Data))
+								filePath, i+1, n+1, test.Description, errStr, string(schemaTest.Schema), string(test.Data))
+						}
 					}
 				}
-			}
 
-			// Go through the tests again, but this time with de-ref'ed $refs
-			err = schema.DeRef()
-			if err != nil {
-				t.Fatal(err)
-			}
+				// Go through the tests again, but this time with de-ref'ed $refs
+				err = schema.DeRef()
+				if err != nil {
+					t.Fatal(err)
+				}
 
-			for n, test := range schemaTest.Tests {
-				actual, err := schema.Validate(test.Data)
+				for n, test := range schemaTest.Tests {
+					actual, err := schema.Validate(test.Data)
 
-				if actual != test.Valid {
-					errStr := fmt.Sprintf("expected validation to be %t, got: %t\n", test.Valid, actual)
-					if err != nil {
-						errStr += err.Error() + "\n\n"
-					}
+					if actual != test.Valid {
+						errStr := fmt.Sprintf("expected validation to be %t, got: %t\n", test.Valid, actual)
+						if err != nil {
+							errStr += err.Error() + "\n\n"
+						}
 
-					if errStr != "" {
-						errStr = "errors encountered:\n" + errStr
+						if errStr != "" {
+							errStr = "errors encountered:\n" + errStr
 
-						t.Fatalf(`%s,
+							t.Fatalf(`%s,
 Test #%d.%d: "%s"
 
 %sSchema:
@@ -377,12 +379,13 @@ Test #%d.%d: "%s"
 
 Test document:
 %s`,
-							filePath, i+1, n+1, test.Description, errStr, string(schemaTest.Schema), string(test.Data))
+								filePath, i+1, n+1, test.Description, errStr, string(schemaTest.Schema), string(test.Data))
+						}
 					}
 				}
-			}
 
-		}
+			}
+		})
 	}
 }
 
@@ -453,7 +456,6 @@ func parseBenchmarkHelper(b *testing.B, dirPath, schemaVersion string) {
 					_, _ = sl, loader1
 				}
 			})
-
 		}
 	}
 }
