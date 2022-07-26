@@ -90,9 +90,10 @@ func (s *Schema) Parse(jsonSchema []byte) (*Schema, error) {
 		schemaProp, ok := nameToProp[string(key)]
 		if !ok {
 			if schema.unknownProps == nil {
-				schema.unknownProps = map[string]*Value{}
+				schema.unknownProps = []*NamedValue{}
 			}
-			schema.unknownProps[string(key)], err = NewValue(value, vt)
+			newVal, err := NewValue(value, vt)
+			schema.unknownProps = append(schema.unknownProps, &NamedValue{Name: string(key), Value: newVal})
 			errs = addError(err, errs)
 			return errs
 		}

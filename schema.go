@@ -68,7 +68,7 @@ type Schema struct {
 	boolean *bool
 
 	// Unknown properties and their values are stored, so they can be marshalled
-	unknownProps map[string]*Value
+	unknownProps []*NamedValue
 
 	/* Schema definition fields */
 
@@ -179,10 +179,13 @@ type Schema struct {
 }
 
 func (s *Schema) SetUnknown(name string, val *Value) error {
-	if s.unknownProps == nil {
-		s.unknownProps = map[string]*Value{}
+	for i, up := range s.unknownProps {
+		if up.Name == name {
+			s.unknownProps[i].Value = val
+			return nil
+		}
 	}
-	s.unknownProps[name] = val
+	s.unknownProps = append(s.unknownProps, &NamedValue{Name: name, Value: val})
 	return nil
 }
 
@@ -190,11 +193,14 @@ func (s *Schema) GetUnknown(name string) (*Value, error) {
 	if s.unknownProps == nil {
 		return nil, errors.New("unknown property not found")
 	}
-	val, ok := s.unknownProps[name]
-	if !ok {
-		return nil, errors.New("unknown property not found")
+
+	for _, up := range s.unknownProps {
+		if up.Name == name {
+			return up.Value, nil
+		}
 	}
-	return val, nil
+
+	return nil, errors.New("unknown property not found")
 }
 
 func (s Schema) MarshalJSON() ([]byte, error) {
@@ -249,12 +255,12 @@ func (s Schema) MarshalJSON() ([]byte, error) {
 	b, err := json.Marshal(tmpSchema(s))
 
 	// Set unknown properties
-	for name, unknown := range s.unknownProps {
-		val, err := unknown.MarshalJSON()
+	for _, up := range s.unknownProps {
+		val, err := up.Value.MarshalJSON()
 		if err != nil {
 			return nil, err
 		}
-		b, err = jsonparser.Set(b, val, name)
+		b, err = jsonparser.Set(b, val, up.Name)
 		if err != nil {
 			return nil, err
 		}

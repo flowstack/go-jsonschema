@@ -377,3 +377,8 @@ func (v *Value) Equal(val *Value) bool {
 
 	return false
 }
+
+type NamedValue struct {
+	Name string
+	*Value
+}
