@@ -281,20 +281,12 @@ func parseAndValidateHelper(t *testing.T, dirPath, schemaVersion string) {
 			t.Fatalf("error while parsing: %s\nerror:%s", filePath, err.Error())
 		}
 
-		// log.Println("======================", filePath, "======================")
 		for i, schemaTest := range schemaTests {
-			// log.Printf("____________________________ #%d: %s ____________________________\n", i, schemaTest.Description)
-
 			// Parse the schema
 			schema, err := New(schemaTest.Schema)
 			if err != nil {
 				t.Fatalf("error while parsing: %s, test #%d\nerror: %s", filePath, i+1, err.Error())
 			}
-
-			// log.Println("CACHE")
-			// for k, s := range *schema.cache {
-			// 	log.Println(k, s.String())
-			// }
 
 			// Verify that we actually have all the information
 			actualSchema, err := json.Marshal(schema)
@@ -335,7 +327,6 @@ func parseAndValidateHelper(t *testing.T, dirPath, schemaVersion string) {
 
 			// Go through the tests and check that the validations matches
 			for n, test := range schemaTest.Tests {
-				// log.Printf("~~~~~~~~~~~~~~~~~~~~~~~~~~~~ #%d.%d: %s ~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n", i, n, test.Description)
 				actual, err := schema.Validate(test.Data)
 
 				if actual != test.Valid {
@@ -367,7 +358,6 @@ Test document:
 			}
 
 			for n, test := range schemaTest.Tests {
-				// log.Printf("~~~~~~~~~~~~~~~~~~~~~~~~~~~~ #%d.%d: %s ~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n", i, n, test.Description)
 				actual, err := schema.Validate(test.Data)
 
 				if actual != test.Valid {
