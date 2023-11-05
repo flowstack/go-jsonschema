@@ -122,13 +122,13 @@ func validateItems(value []byte, vt ValueType, schema *Schema) error {
 
 		// Don't spent time validating, if we already have a parser error
 		if parseErr != nil {
-			errs = addError(parseErr, errs)
+			errs = addOriginIndex(addError(parseErr, errs), idx)
 			return
 		}
 
 		if schema.UniqueItems != nil && *schema.UniqueItems {
 			if unique.Exists(value, dataType) {
-				errs = addError(errors.New("values are not unique"), errs)
+				errs = addOriginIndex(addError(errors.New("values are not unique"), errs), idx)
 				return
 			}
 		}
@@ -146,11 +146,11 @@ func validateItems(value []byte, vt ValueType, schema *Schema) error {
 
 		} else if schema.Items.Schema != nil {
 			err := validate(value, ValueType(dataType), schema.Items.Schema)
-			errs = addError(err, errs)
+			errs = addOriginIndex(addError(err, errs), idx)
 
 		} else if schema.Items.Schemas != nil && idx < len(*schema.Items.Schemas) {
 			err := validate(value, ValueType(dataType), (*schema.Items.Schemas)[idx])
-			errs = addError(err, errs)
+			errs = addOriginIndex(addError(err, errs), idx)
 
 		} else if schema.AdditionalItems == nil {
 			// It's allowed to have more items than schemas
@@ -159,10 +159,10 @@ func validateItems(value []byte, vt ValueType, schema *Schema) error {
 		} else if schema.AdditionalItems != nil && (schema.IsDraft4() || len(*schema.Items.Schemas) > 0) {
 			// Only draft 4 allows addtionalItems without items as well
 			err := validate(value, ValueType(dataType), schema.AdditionalItems)
-			errs = addError(err, errs)
+			errs = addOriginIndex(addError(err, errs), idx)
 
 		} else {
-			errs = addError(fmt.Errorf("index %d has no schema to match against", idx), errs)
+			errs = addOriginIndex(addError(fmt.Errorf("index %d has no schema to match against", idx), errs), idx)
 		}
 	})
 
@@ -224,7 +224,7 @@ func validateProperties(value []byte, vt ValueType, schema *Schema) error {
 					if subSchema != nil {
 						err := validate(value, ValueType(dataType), subSchema)
 						if err != nil {
-							return err
+							return addOriginPath(err, string(key))
 						}
 					}
 				}
@@ -237,7 +237,8 @@ func validateProperties(value []byte, vt ValueType, schema *Schema) error {
 
 		if subSchema != nil {
 			subSchema.name = string(key)
-			return validate(value, ValueType(dataType), subSchema)
+			err := validate(value, ValueType(dataType), subSchema)
+			return addOriginPath(err, string(key))
 		}
 		return nil
 	})
@@ -299,7 +300,7 @@ func validatePropertyNames(value []byte, vt ValueType, schema *Schema) error {
 	}
 
 	return jsonparser.ObjectEach(value, func(key []byte, value []byte, dataType jsonparser.ValueType, offset int) error {
-		return validate(key, String, schema.PropertyNames)
+		return addOriginPath(validate(key, String, schema.PropertyNames), string(key))
 	})
 }
 
