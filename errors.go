@@ -14,7 +14,7 @@ func addError(err, errs error) error {
 		return err
 	}
 
-	return fmt.Errorf("%w\n%w", errs, err.Error())
+	return fmt.Errorf("%w\n%w", errs, err)
 }
 
 type validationError struct {
@@ -27,7 +27,7 @@ func (e *validationError) addToPath(segment string) {
 }
 
 func (e *validationError) Error() string {
-	pathParts := append([]string{"@"}, e.originPath...)
+	pathParts := append([]string{"$"}, e.originPath...)
 	return fmt.Sprintf("%v at %v", e.err, strings.Join(pathParts, "."))
 }
 

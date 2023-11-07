@@ -10,7 +10,7 @@ func TestAddSchema(t *testing.T) {
 	var testRefSchemaSubitem = `{"$id":"http://example.com/schemas/subitem","properties":{"id":{"type":"number"},"label":{"type":"string"}}}`
 	var testDoc = `{"id":123,"item":{"id":321,"label":"item","subitem1":{"id":789,"label":"subitem1"},"subitem2":{"id":987,"label":"subitem2"}}}`
 	var testDocInvalid = `{"id":123,"item":{"id":321,"label":"item","subitem1":{"id":789,"label":"subitem1"},"subitem2":{"id":"987","label":"subitem2"}}}`
-	var expectedError = `value "987" is of type string, but should be of type: number at @.item.subitem2.id`
+	var expectedError = `value "987" is of type string, but should be of type: number at $.item.subitem2.id`
 
 	schema, err := NewFromString(testSchema)
 	if err != nil {
