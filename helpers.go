@@ -2,7 +2,6 @@ package jsonschema
 
 import (
 	"bytes"
-	"fmt"
 	"log"
 	"math/big"
 	"strings"
@@ -53,17 +52,6 @@ var regexpControlChars = map[string]string{
 	`\c]`: `\01D`,
 	`\c^`: `\01E`,
 	`\c_`: `\01F`,
-}
-
-func addError(err, errs error) error {
-	if err == nil {
-		return errs
-	}
-	if errs == nil {
-		return err
-	}
-
-	return fmt.Errorf("%w\n%s", errs, err.Error())
 }
 
 func convertRegexp(re string) string {

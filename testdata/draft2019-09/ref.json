@@ -34,14 +34,14 @@
         "description": "relative pointer ref to object",
         "schema": {
             "properties": {
-                "foo": {"type": "integer"},
+                "foo": {"type": "string"},
                 "bar": {"$ref": "#/properties/foo"}
             }
         },
         "tests": [
             {
                 "description": "match",
-                "data": {"bar": 3},
+                "data": {"bar": "bu\\z"},
                 "valid": true
             },
             {
