@@ -30,14 +30,6 @@ func validate(value []byte, vt ValueType, schema *Schema) error {
 		return errors.New("no schema supplied")
 	}
 
-	if vt == String {
-		value, err = jsonparser.Unescape(value, nil)
-		if err != nil {
-			log.Println(err)
-			return err
-		}
-	}
-
 	if len(schema.validators) == 0 {
 		return errors.New("no validators found - at least 1 was expected")
 	}
@@ -282,6 +274,11 @@ func validatePattern(value []byte, vt ValueType, schema *Schema) error {
 	if vt != String {
 		return nil
 	}
+	value, err := jsonparser.Unescape(value, nil)
+	if err != nil {
+		log.Println(err)
+		return err
+	}
 
 	if !schema.patternRegexp.Match(value) {
 		return errors.New("value did not match pattern")
@@ -291,8 +288,9 @@ func validatePattern(value []byte, vt ValueType, schema *Schema) error {
 }
 
 // TODO: It might be necessary and / or better to split ValidateProperties into it's
-// 	     original multiple ValidateXxx methods, so that they do not depend on a
-//       properties object to exist.
+//
+//		     original multiple ValidateXxx methods, so that they do not depend on a
+//	      properties object to exist.
 func validatePropertyNames(value []byte, vt ValueType, schema *Schema) error {
 	// Ignore anything other than Objects (probably an Array)
 	if vt != Object {
@@ -565,6 +563,11 @@ func validateMaxLength(value []byte, vt ValueType, schema *Schema) error {
 	if vt != String {
 		return nil
 	}
+	value, err := jsonparser.Unescape(value, nil)
+	if err != nil {
+		log.Println(err)
+		return err
+	}
 	if utf8.RuneCount(value) > int(*schema.MaxLength) {
 		return fmt.Errorf("length of value is more than %d", *schema.MaxLength)
 	}
@@ -575,6 +578,11 @@ func validateMinLength(value []byte, vt ValueType, schema *Schema) error {
 	// Ignore anything but strings
 	if vt != String {
 		return nil
+	}
+	value, err := jsonparser.Unescape(value, nil)
+	if err != nil {
+		log.Println(err)
+		return err
 	}
 	if utf8.RuneCount(value) < int(*schema.MinLength) {
 		return fmt.Errorf("length of value is less than %d", *schema.MinLength)
@@ -617,6 +625,11 @@ func validateConst(value []byte, vt ValueType, schema *Schema) error {
 		value = sortObject(value)
 
 	} else if vt == String {
+		value, err := jsonparser.Unescape(value, nil)
+		if err != nil {
+			log.Println(err)
+			return err
+		}
 		if schema.Const.String != nil && *schema.Const.String == string(value) {
 			return nil
 		}
@@ -658,6 +671,11 @@ func validateFormat(value []byte, vt ValueType, schema *Schema) error {
 	// Ignore anything that is not a string
 	if vt != String {
 		return nil
+	}
+	value, err := jsonparser.Unescape(value, nil)
+	if err != nil {
+		log.Println(err)
+		return err
 	}
 
 	// Parse takes a layout string, which defines the format by showing how the reference time,
