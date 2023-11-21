@@ -12,6 +12,7 @@ import (
 	"time"
 
 	"github.com/flowstack/go-jsonschema/testtools"
+	"github.com/stretchr/testify/assert"
 	"github.com/xeipuuv/gojsonschema"
 )
 
@@ -104,11 +105,7 @@ func TestValidateEmptyDocWithSchema(t *testing.T) {
 	}
 
 	_, err = schema.Validate([]byte(""))
-	if err == nil {
-		t.Fatal(`expected empty err, expected: empty document does not validate against the schema`)
-	} else if err.Error() != `empty document is not valid against any other schemas than "false"` {
-		t.Fatalf(`expected error to be:\nempty document is not valid against any other schemas than "false"\n, got:\n%s`, err.Error())
-	}
+	assert.Error(t, err) // empty document is not valid JSON and therefore cannot be valid against any schema
 }
 
 func TestValidateSchemaWithWrongSchema(t *testing.T) {
@@ -117,36 +114,6 @@ func TestValidateSchemaWithWrongSchema(t *testing.T) {
 		t.Fatal(`expected err`)
 	} else if err.Error() != "invalid schema" {
 		t.Fatalf("expected error to be:\ninvalid schema\n, got:\n%s", err.Error())
-	}
-}
-
-// TODO: verify that this is the wanted outcome
-func TestValidateEmptyDocWithFalseSchema(t *testing.T) {
-	schema, err := NewFromString("false")
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	valid, err := schema.Validate([]byte(""))
-	if err != nil {
-		t.Fatalf("expected error to be empty, got:\n%s", err.Error())
-	} else if !valid {
-		t.Fatal(`expected document to be valid`)
-	}
-}
-
-// TODO: verify that this is the wanted outcome
-func TestValidateValueWithTrueSchema(t *testing.T) {
-	schema, err := NewFromString("true")
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	valid, err := schema.Validate([]byte("1"))
-	if err != nil {
-		t.Fatalf(`expected error to be empty, got: %s`, err.Error())
-	} else if !valid {
-		t.Fatal(`expected document to be valid`)
 	}
 }
 

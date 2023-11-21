@@ -45,26 +45,10 @@ func validate(value []byte, vt ValueType, schema *Schema) error {
 }
 
 func validateValue(value []byte, vt ValueType, schema *Schema) error {
-	// If the we have an empty value and the schema is not boolean (false), then the doc is invalid
-	// if len(value) == 0 && schema.boolean != nil && !*schema.boolean {
-	if len(value) == 0 && schema.IsEmpty() {
-		return errors.New(`empty document is not valid against any other schemas than "false"`)
-	}
 	return nil
 }
 
 func validateBooleanSchema(value []byte, vt ValueType, schema *Schema) error {
-	// Start by checking for empty JSON value
-	if len(value) == 0 {
-		// If we have an empty value and a boolean false schema then the value is valid
-		if !*schema.boolean {
-			return nil
-		}
-		// If we do not have a boolean false schema, but have an empty value, then the doc is invalid
-		return errors.New("empty document does not validate against the schema")
-	}
-
-	// If we have a value and a boolean true schema then the value is valid
 	if *schema.boolean {
 		return nil
 	}
