@@ -33,6 +33,9 @@ func (s *Schema) Validate(jsonDoc []byte) (bool, error) {
 	if s == nil {
 		return false, errors.New("invalid schema")
 	}
+	if len(jsonDoc) == 0 {
+		return false, errors.New("empty document is not valid JSON")
+	}
 
 	// Ensure that datectors work (though it slows things down a bit)
 	jsonDoc = bytes.Trim(jsonDoc, " \r\n")

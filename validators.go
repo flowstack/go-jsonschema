@@ -30,14 +30,6 @@ func validate(value []byte, vt ValueType, schema *Schema) error {
 		return errors.New("no schema supplied")
 	}
 
-	if vt == String {
-		value, err = jsonparser.Unescape(value, nil)
-		if err != nil {
-			log.Println(err)
-			return err
-		}
-	}
-
 	if len(schema.validators) == 0 {
 		return errors.New("no validators found - at least 1 was expected")
 	}
@@ -53,26 +45,10 @@ func validate(value []byte, vt ValueType, schema *Schema) error {
 }
 
 func validateValue(value []byte, vt ValueType, schema *Schema) error {
-	// If the we have an empty value and the schema is not boolean (false), then the doc is invalid
-	// if len(value) == 0 && schema.boolean != nil && !*schema.boolean {
-	if len(value) == 0 && schema.IsEmpty() {
-		return errors.New(`empty document is not valid against any other schemas than "false"`)
-	}
 	return nil
 }
 
 func validateBooleanSchema(value []byte, vt ValueType, schema *Schema) error {
-	// Start by checking for empty JSON value
-	if len(value) == 0 {
-		// If we have an empty value and a boolean false schema then the value is valid
-		if !*schema.boolean {
-			return nil
-		}
-		// If we do not have a boolean false schema, but have an empty value, then the doc is invalid
-		return errors.New("empty document does not validate against the schema")
-	}
-
-	// If we have a value and a boolean true schema then the value is valid
 	if *schema.boolean {
 		return nil
 	}
@@ -122,13 +98,13 @@ func validateItems(value []byte, vt ValueType, schema *Schema) error {
 
 		// Don't spent time validating, if we already have a parser error
 		if parseErr != nil {
-			errs = addError(parseErr, errs)
+			errs = addOriginIndex(addError(parseErr, errs), idx)
 			return
 		}
 
 		if schema.UniqueItems != nil && *schema.UniqueItems {
 			if unique.Exists(value, dataType) {
-				errs = addError(errors.New("values are not unique"), errs)
+				errs = addOriginIndex(addError(errors.New("values are not unique"), errs), idx)
 				return
 			}
 		}
@@ -146,11 +122,11 @@ func validateItems(value []byte, vt ValueType, schema *Schema) error {
 
 		} else if schema.Items.Schema != nil {
 			err := validate(value, ValueType(dataType), schema.Items.Schema)
-			errs = addError(err, errs)
+			errs = addOriginIndex(addError(err, errs), idx)
 
 		} else if schema.Items.Schemas != nil && idx < len(*schema.Items.Schemas) {
 			err := validate(value, ValueType(dataType), (*schema.Items.Schemas)[idx])
-			errs = addError(err, errs)
+			errs = addOriginIndex(addError(err, errs), idx)
 
 		} else if schema.AdditionalItems == nil {
 			// It's allowed to have more items than schemas
@@ -159,10 +135,10 @@ func validateItems(value []byte, vt ValueType, schema *Schema) error {
 		} else if schema.AdditionalItems != nil && (schema.IsDraft4() || len(*schema.Items.Schemas) > 0) {
 			// Only draft 4 allows addtionalItems without items as well
 			err := validate(value, ValueType(dataType), schema.AdditionalItems)
-			errs = addError(err, errs)
+			errs = addOriginIndex(addError(err, errs), idx)
 
 		} else {
-			errs = addError(fmt.Errorf("index %d has no schema to match against", idx), errs)
+			errs = addOriginIndex(addError(fmt.Errorf("index %d has no schema to match against", idx), errs), idx)
 		}
 	})
 
@@ -224,7 +200,7 @@ func validateProperties(value []byte, vt ValueType, schema *Schema) error {
 					if subSchema != nil {
 						err := validate(value, ValueType(dataType), subSchema)
 						if err != nil {
-							return err
+							return addOriginPath(err, string(key))
 						}
 					}
 				}
@@ -237,7 +213,8 @@ func validateProperties(value []byte, vt ValueType, schema *Schema) error {
 
 		if subSchema != nil {
 			subSchema.name = string(key)
-			return validate(value, ValueType(dataType), subSchema)
+			err := validate(value, ValueType(dataType), subSchema)
+			return addOriginPath(err, string(key))
 		}
 		return nil
 	})
@@ -281,6 +258,11 @@ func validatePattern(value []byte, vt ValueType, schema *Schema) error {
 	if vt != String {
 		return nil
 	}
+	value, err := jsonparser.Unescape(value, nil)
+	if err != nil {
+		log.Println(err)
+		return err
+	}
 
 	if !schema.patternRegexp.Match(value) {
 		return errors.New("value did not match pattern")
@@ -290,8 +272,9 @@ func validatePattern(value []byte, vt ValueType, schema *Schema) error {
 }
 
 // TODO: It might be necessary and / or better to split ValidateProperties into it's
-// 	     original multiple ValidateXxx methods, so that they do not depend on a
-//       properties object to exist.
+//
+//		     original multiple ValidateXxx methods, so that they do not depend on a
+//	      properties object to exist.
 func validatePropertyNames(value []byte, vt ValueType, schema *Schema) error {
 	// Ignore anything other than Objects (probably an Array)
 	if vt != Object {
@@ -299,7 +282,7 @@ func validatePropertyNames(value []byte, vt ValueType, schema *Schema) error {
 	}
 
 	return jsonparser.ObjectEach(value, func(key []byte, value []byte, dataType jsonparser.ValueType, offset int) error {
-		return validate(key, String, schema.PropertyNames)
+		return addOriginPath(validate(key, String, schema.PropertyNames), string(key))
 	})
 }
 
@@ -564,6 +547,11 @@ func validateMaxLength(value []byte, vt ValueType, schema *Schema) error {
 	if vt != String {
 		return nil
 	}
+	value, err := jsonparser.Unescape(value, nil)
+	if err != nil {
+		log.Println(err)
+		return err
+	}
 	if utf8.RuneCount(value) > int(*schema.MaxLength) {
 		return fmt.Errorf("length of value is more than %d", *schema.MaxLength)
 	}
@@ -574,6 +562,11 @@ func validateMinLength(value []byte, vt ValueType, schema *Schema) error {
 	// Ignore anything but strings
 	if vt != String {
 		return nil
+	}
+	value, err := jsonparser.Unescape(value, nil)
+	if err != nil {
+		log.Println(err)
+		return err
 	}
 	if utf8.RuneCount(value) < int(*schema.MinLength) {
 		return fmt.Errorf("length of value is less than %d", *schema.MinLength)
@@ -616,6 +609,11 @@ func validateConst(value []byte, vt ValueType, schema *Schema) error {
 		value = sortObject(value)
 
 	} else if vt == String {
+		value, err := jsonparser.Unescape(value, nil)
+		if err != nil {
+			log.Println(err)
+			return err
+		}
 		if schema.Const.String != nil && *schema.Const.String == string(value) {
 			return nil
 		}
@@ -657,6 +655,11 @@ func validateFormat(value []byte, vt ValueType, schema *Schema) error {
 	// Ignore anything that is not a string
 	if vt != String {
 		return nil
+	}
+	value, err := jsonparser.Unescape(value, nil)
+	if err != nil {
+		log.Println(err)
+		return err
 	}
 
 	// Parse takes a layout string, which defines the format by showing how the reference time,

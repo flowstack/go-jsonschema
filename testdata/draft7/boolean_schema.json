@@ -14,6 +14,11 @@
                 "valid": true
             },
             {
+                "description": "empty string is valid",
+                "data": "",
+                "valid": true
+            },
+            {
                 "description": "boolean true is valid",
                 "data": true,
                 "valid": true
@@ -62,6 +67,11 @@
             {
                 "description": "string is invalid",
                 "data": "foo",
+                "valid": false
+            },
+            {
+                "description": "empty string is invalid",
+                "data": "",
                 "valid": false
             },
             {
